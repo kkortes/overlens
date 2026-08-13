@@ -1,0 +1,5 @@
+{
+  "buildCommand": "bun run compile",
+  "outputDirectory": "compiled",
+  "rewrites": [{ "source": "/:path*", "destination": "/index.html" }]
+}

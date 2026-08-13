@@ -1,0 +1,36 @@
+{
+  "name": "overlens",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "../dev.sh 'bun dev.js'",
+    "compile": "bun node_modules/@ape-egg/vibe-compiler/bin/vibe-compile.js"
+  },
+  "dependencies": {
+    "@ape-egg/vibe": "^3.0.4"
+  },
+  "devDependencies": {
+    "@ape-egg/vibe-compiler": "^3.0.4"
+  },
+  "vibe-compiler": {
+    "source": "./",
+    "output": "./compiled",
+    "pages": "pages",
+    "root": "pages",
+    "spa": true,
+    "elementsAsIs": true,
+    "componentsAsIs": false,
+    "skipFiles": [
+      "api",
+      "dev.js",
+      "package.json",
+      "bun.lock",
+      "bun.lockb",
+      "vercel.json",
+      "implementation.md",
+      "CLAUDE.md",
+      "README.md"
+    ]
+  }
+}

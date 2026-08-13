@@ -1,0 +1,217 @@
+<overlens-inspector>
+  <!-- if inspector.phase === 'loading' -->
+  <inspector-state>
+    <icon spinner animate-spin lg></icon>
+    <p>Reading @[inspector.owner]/@[inspector.repo] · PR #@[inspector.pr]…</p>
+  </inspector-state>
+  <!-- /if -->
+
+  <!-- if inspector.phase === 'gate' -->
+  <inspector-state>
+    <icon lock-closed lg></icon>
+    <h2>Private repo, or no access</h2>
+    <p>
+      Overlens is a read-only lens over a repo's snapshot branches. For private
+      repos it needs you signed in with GitHub and the Overlens app installed
+      on <strong>@[inspector.owner]/@[inspector.repo]</strong> — Contents
+      read-only, revoke anytime.
+    </p>
+    <crow g-3>
+      <button primary onclick="$.signIn()"><icon logo-github></icon> Sign in with GitHub</button>
+      <a href="https://github.com/apps/overlens/installations/new" secondary target="_blank" rel="noopener">
+        Install the app on this repo
+      </a>
+    </crow>
+    <!-- if auth.authed -->
+    <p muted>
+      You are signed in, but this repo still answered "not found" — the app is
+      probably not installed on it, or the repo doesn't exist.
+    </p>
+    <!-- /if -->
+  </inspector-state>
+  <!-- /if -->
+
+  <!-- if inspector.phase === 'no-data' -->
+  <inspector-state>
+    <icon images lg></icon>
+    <h2>No Overlens data for this PR</h2>
+    <p>
+      <strong>@[inspector.owner]/@[inspector.repo]</strong> has no
+      <code>overlens/pr-@[inspector.pr]</code> branch. It appears after the
+      PR's first preview deploy once the repo runs the Overlens workflow.
+    </p>
+  </inspector-state>
+  <!-- /if -->
+
+  <!-- if inspector.phase === 'no-report' -->
+  <inspector-state>
+    <icon clock lg></icon>
+    <h2>This branch predates report.json</h2>
+    <p>
+      <code>overlens/pr-@[inspector.pr]</code> exists but carries no
+      <code>report.json</code> — it was produced by an older run. Push to the
+      PR (or re-run its Overlens workflow) and the next snapshot will be
+      inspectable.
+    </p>
+  </inspector-state>
+  <!-- /if -->
+
+  <!-- if inspector.phase === 'clean' -->
+  <inspector-state>
+    <icon checkmark lg></icon>
+    <h2>No visual changes</h2>
+    <p>
+      The latest run of PR #@[inspector.pr] matches
+      <code>overlens/dev</code> pixel for pixel.
+    </p>
+  </inspector-state>
+  <!-- /if -->
+
+  <!-- if inspector.phase === 'error' -->
+  <inspector-state>
+    <icon heart-broken lg></icon>
+    <h2>Something broke</h2>
+    <p>@[inspector.error]</p>
+  </inspector-state>
+  <!-- /if -->
+
+  <!-- if inspector.phase === 'ready' -->
+  <inspector-meta>
+    <a href="https://github.com/@[inspector.owner]/@[inspector.repo]/pull/@[inspector.pr]" target="_blank" rel="noopener" tertiary sm>
+      <icon logo-github></icon> @[inspector.owner]/@[inspector.repo] #@[inspector.pr]
+    </a>
+    <meta-detail>
+      @[inspector.pages.length] page@[inspector.pages.length === 1 ? '' : 's'] ·
+      @[inspector.headSha.slice(0, 7)] vs @[inspector.baseSha.slice(0, 7)]
+    </meta-detail>
+    <!-- if inspector.drift -->
+    <badge bg-orange text-orange title="overlens/dev has moved since this report was generated — the base you see is today's tip, not the one the percentages were computed against. Re-run Overlens on the PR to refresh.">
+      base drift
+    </badge>
+    <!-- /if -->
+  </inspector-meta>
+
+  <inspector-controls>
+    <control-group inert="@[view.difference]">
+      <button sm secondary active="@[view.mode === 'split']" onclick="$.setMode('split')">Split</button>
+      <button sm secondary active="@[view.mode === 'onion']" onclick="$.setMode('onion')">Onion</button>
+      <button sm secondary active="@[view.mode === 'twoup']" onclick="$.setMode('twoup')">2-up</button>
+    </control-group>
+    <!-- if view.mode === 'onion' -->
+    <input type="range" min="0" max="100" value="@[view.onion]" oninput="$.view.onion = +this.value" inert="@[view.difference]" title="Blend base and PR" />
+    <!-- /if -->
+    <control-group>
+      <button sm secondary active="@[view.viewport === 'desktop']" onclick="$.setViewport('desktop')" title="Desktop viewport"><icon desktop></icon></button>
+      <button sm secondary active="@[view.viewport === 'mobile']" onclick="$.setViewport('mobile')" title="Smartphone viewport"><icon smartphone></icon></button>
+    </control-group>
+    <control-group>
+      <button sm secondary active="@[view.theme === 'light']" onclick="$.setTheme('light')" title="Light theme"><icon light></icon></button>
+      <button sm secondary active="@[view.theme === 'dark']" onclick="$.setTheme('dark')" title="Dark theme"><icon dark></icon></button>
+    </control-group>
+    <button sm secondary active="@[view.difference]" onclick="$.toggleDifference()" title="Pixel-level difference of the current pair">
+      <red-dot></red-dot> Difference
+    </button>
+  </inspector-controls>
+
+  <carousel>
+    <slides y>
+      <!-- each inspector.pages as p (p.name) -->
+      <section>
+        <slide-header>
+          <h2>@[p.pretty]</h2>
+          <!-- if p.cur -->
+          <!-- if p.cur.status === 'added' --><badge bg-green text-green>added</badge><!-- /if -->
+          <!-- if p.cur.status === 'changed' --><badge bg-orange text-orange>changed</badge><!-- /if -->
+          <!-- if p.cur.status === 'removed' --><badge bg-red text-red>removed</badge><!-- /if -->
+          <!-- if p.cur.diffPercent -->
+          <diff-percent>@[p.cur.diffPercent]% of union area</diff-percent>
+          <!-- /if -->
+          <!-- /if -->
+        </slide-header>
+
+        <compare-pane>
+          <!-- if p.cur -->
+
+          <!-- if p.cur.error -->
+          <pane-note danger>@[p.cur.error]</pane-note>
+          <!-- /if -->
+
+          <!-- if p.cur.status === 'added' -->
+          <pane-note>New page — nothing to compare against. This is the PR's version.</pane-note>
+          <!-- if p.cur.headUrl -->
+          <compare-single>
+            <img src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head')]" alt="PR screenshot of @[p.pretty]" />
+          </compare-single>
+          <!-- /if -->
+          <!-- /if -->
+
+          <!-- if p.cur.status === 'removed' -->
+          <pane-note>Removed page — this baseline no longer exists in the PR.</pane-note>
+          <!-- if p.cur.baseUrl -->
+          <compare-single>
+            <img src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base')]" alt="Baseline screenshot of @[p.pretty]" />
+          </compare-single>
+          <!-- /if -->
+          <!-- /if -->
+
+          <!-- if p.cur.status === 'changed' -->
+          <!-- if view.difference -->
+          <!-- if p.cur.diffUrl -->
+          <compare-single>
+            <img src="@[p.cur.diffUrl]" style="width: @[imgWidth(p.cur, 'diff')]" alt="Pixel difference of @[p.pretty]" />
+          </compare-single>
+          <!-- else -->
+          <pane-note><icon spinner animate-spin></icon> Computing pixel difference…</pane-note>
+          <!-- /if -->
+          <!-- else -->
+          <!-- if p.cur.baseUrl && p.cur.headUrl -->
+
+          <!-- if view.mode === 'split' -->
+          <compare-stack style="--split: @[view.split]%">
+            <img base src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base')]" alt="Baseline of @[p.pretty]" />
+            <img head clipped src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head')]" alt="PR version of @[p.pretty]" />
+            <split-handle onpointerdown="$.dragSplit(event)" title="Drag — PR left, base right"></split-handle>
+          </compare-stack>
+          <!-- /if -->
+
+          <!-- if view.mode === 'onion' -->
+          <compare-stack>
+            <img base src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base')]" alt="Baseline of @[p.pretty]" />
+            <img head src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head')]; opacity: @[view.onion / 100]" alt="PR version of @[p.pretty]" />
+          </compare-stack>
+          <!-- /if -->
+
+          <!-- if view.mode === 'twoup' -->
+          <two-up>
+            <figure>
+              <figcaption>base · overlens/dev</figcaption>
+              <img src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base')]" alt="Baseline of @[p.pretty]" />
+            </figure>
+            <figure>
+              <figcaption>PR #@[inspector.pr]</figcaption>
+              <img src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head')]" alt="PR version of @[p.pretty]" />
+            </figure>
+          </two-up>
+          <!-- /if -->
+
+          <!-- else -->
+          <pane-note><icon spinner animate-spin></icon> Loading screenshots…</pane-note>
+          <!-- /if -->
+          <!-- /if -->
+          <!-- /if -->
+
+          <!-- else -->
+          <pane-note>
+            Nothing changed in <code>@[view.variant]</code> for this page — it differs in:
+            <!-- each Object.keys(p.variants) as k -->
+            <button sm tertiary onclick="$.jumpVariant('@[k]')">@[k]</button>
+            <!-- /each -->
+          </pane-note>
+          <!-- /if -->
+        </compare-pane>
+      </section>
+      <!-- /each -->
+    </slides>
+  </carousel>
+  <!-- /if -->
+</overlens-inspector>

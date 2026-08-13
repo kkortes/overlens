@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Overlens</title>
+    <link rel="icon" href="/assets/favicon.svg" />
+    <link rel="stylesheet" href="/node_modules/@ape-egg/vibe/vibe.css" />
+    <link rel="stylesheet" href="/css/site.css" />
+
+    <script type="module">
+      import vibe from "/node_modules/@ape-egg/vibe/index.js";
+      import globalState from "/js/globalState.js";
+      import { handleCallback } from "/js/github.js";
+
+      window.$ = vibe({ ...globalState });
+      handleCallback();
+    </script>
+  </head>
+
+  <body stylecheat dark vibe-fouc>
+    <component src="/components/Landing.html"></component>
+  </body>
+</html>

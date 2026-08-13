@@ -1,0 +1,45 @@
+<landing-page>
+  <landing-hero>
+    <overlens-mark aria-hidden="true"></overlens-mark>
+    <h1>Overlens</h1>
+    <p tagline>
+      Visual regression review, straight from GitHub. No accounts, no database —
+      the snapshot branches are the data and the URL is the query.
+    </p>
+
+    <!-- if hint -->
+    <hint-banner>
+      <icon eye></icon>
+      That URL didn't match anything. The inspector lives at the address below —
+      point it at any repo running the Overlens workflow.
+    </hint-banner>
+    <!-- /if -->
+
+    <!-- if auth.error -->
+    <hint-banner danger><icon cross></icon> Sign-in failed: @[auth.error]</hint-banner>
+    <!-- /if -->
+
+    <url-sample>overlens.vercel.app<strong>/{owner}/{repo}/pull/{number}</strong></url-sample>
+
+    <landing-shot>
+      <img src="/assets/inspector.png" alt="The Overlens inspector comparing two screenshots in Split mode" />
+    </landing-shot>
+
+    <landing-how>
+      A repo's Overlens workflow crawls every preview deploy and pushes
+      screenshots to <code>overlens/dev</code> and <code>overlens/pr-{n}</code>
+      branches. This site reads those branches — tip against tip — and renders
+      what a merge would mean today: Split, Onion, 2-up and a pixel-level
+      Difference, at both viewports and in both themes.
+    </landing-how>
+
+    <crow g-3>
+      <a href="https://github.com/kkortes/overlens" primary target="_blank" rel="noopener">
+        <icon logo-github></icon> GitHub
+      </a>
+      <!-- if auth.authed -->
+      <button secondary onclick="$.signOut()">Sign out</button>
+      <!-- /if -->
+    </crow>
+  </landing-hero>
+</landing-page>
