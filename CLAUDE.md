@@ -72,8 +72,8 @@ Vercel project on `kkortes/overlens`: [vercel.json](vercel.json) sets
    `/`, note the slug. Fill client id into [js/config.js](js/config.js) (and
    the install link in Inspector.html if the slug isn't `overlens`); client
    id + secret into Vercel env.
-2. Link the Vercel project to `kkortes/overlens` (`overlens.vercel.app`).
-3. Check `overlens.com` availability.
+2. Link the Vercel project to `kkortes/overlens` — live at
+   `https://overlens.korte.kim`.
 
 ## Pending upstream
 
