@@ -1,4 +1,7 @@
 <landing-page>
+  <top-right>
+    <component src="/components/AuthBar.html"></component>
+  </top-right>
   <landing-hero>
     <overlens-mark aria-hidden="true"></overlens-mark>
     <h1>Overlens</h1>
@@ -37,9 +40,6 @@
       <a href="https://github.com/kkortes/overlens" primary target="_blank" rel="noopener">
         <icon logo-github></icon> GitHub
       </a>
-      <!-- if auth.authed -->
-      <button secondary onclick="$.signOut()">Sign out</button>
-      <!-- /if -->
     </crow>
   </landing-hero>
 </landing-page>

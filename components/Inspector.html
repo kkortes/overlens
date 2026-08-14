@@ -1,4 +1,29 @@
 <overlens-inspector>
+  <top-right>
+    <!-- if inspector.phase === 'ready' -->
+    <inspector-controls>
+      <control-group>
+        <button secondary active="@[view.mode === 'difference']" onclick="$.setMode('difference')" title="Pixel-level difference of the current pair"><red-dot></red-dot> Difference</button>
+        <button secondary active="@[view.mode === 'split']" onclick="$.setMode('split')">Split</button>
+        <button secondary active="@[view.mode === 'onion']" onclick="$.setMode('onion')">Onion</button>
+        <button secondary active="@[view.mode === 'twoup']" onclick="$.setMode('twoup')">2-up</button>
+      </control-group>
+      <!-- if view.mode === 'onion' -->
+      <input type="range" min="0" max="100" value="@[view.onion]" oninput="$.view.onion = +this.value" title="Blend base and PR" />
+      <!-- /if -->
+      <control-group>
+        <button secondary active="@[view.viewport === 'desktop']" onclick="$.setViewport('desktop')" title="Desktop viewport"><icon desktop></icon></button>
+        <button secondary active="@[view.viewport === 'mobile']" onclick="$.setViewport('mobile')" title="Smartphone viewport"><icon smartphone></icon></button>
+      </control-group>
+      <control-group>
+        <button secondary active="@[view.theme === 'light']" onclick="$.setTheme('light')" title="Light theme"><icon light></icon></button>
+        <button secondary active="@[view.theme === 'dark']" onclick="$.setTheme('dark')" title="Dark theme"><icon dark></icon></button>
+      </control-group>
+    </inspector-controls>
+    <!-- /if -->
+    <component src="/components/AuthBar.html"></component>
+  </top-right>
+
   <!-- if inspector.phase === 'loading' -->
   <inspector-state>
     <icon spinner animate-spin lg></icon>
@@ -17,12 +42,12 @@
       read-only, revoke anytime.
     </p>
     <!-- if auth.configured -->
-    <crow g-3>
+    <gate-actions>
       <button primary onclick="$.signIn()"><icon logo-github></icon> Sign in with GitHub</button>
-      <a href="https://github.com/apps/@[auth.appSlug]/installations/new?state=@[page.path]" secondary target="_blank" rel="noopener">
-        Install the app on this repo
+      <a href="https://github.com/apps/@[auth.appSlug]/installations/new?state=@[page.path]" class="button" primary target="_blank" rel="noopener">
+        <icon download></icon> Install the app on this repo
       </a>
-    </crow>
+    </gate-actions>
     <!-- else -->
     <p muted>
       Sign-in isn't available yet — the Overlens GitHub App hasn't been
@@ -97,26 +122,6 @@
     </badge>
     <!-- /if -->
   </inspector-meta>
-
-  <inspector-controls>
-    <control-group>
-      <button secondary active="@[view.mode === 'difference']" onclick="$.setMode('difference')" title="Pixel-level difference of the current pair"><red-dot></red-dot> Difference</button>
-      <button secondary active="@[view.mode === 'split']" onclick="$.setMode('split')">Split</button>
-      <button secondary active="@[view.mode === 'onion']" onclick="$.setMode('onion')">Onion</button>
-      <button secondary active="@[view.mode === 'twoup']" onclick="$.setMode('twoup')">2-up</button>
-    </control-group>
-    <!-- if view.mode === 'onion' -->
-    <input type="range" min="0" max="100" value="@[view.onion]" oninput="$.view.onion = +this.value" title="Blend base and PR" />
-    <!-- /if -->
-    <control-group>
-      <button secondary active="@[view.viewport === 'desktop']" onclick="$.setViewport('desktop')" title="Desktop viewport"><icon desktop></icon></button>
-      <button secondary active="@[view.viewport === 'mobile']" onclick="$.setViewport('mobile')" title="Smartphone viewport"><icon smartphone></icon></button>
-    </control-group>
-    <control-group>
-      <button secondary active="@[view.theme === 'light']" onclick="$.setTheme('light')" title="Light theme"><icon light></icon></button>
-      <button secondary active="@[view.theme === 'dark']" onclick="$.setTheme('dark')" title="Dark theme"><icon dark></icon></button>
-    </control-group>
-  </inspector-controls>
 
   <carousel>
     <slides y>

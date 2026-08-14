@@ -54,19 +54,30 @@ inspector-state p {
   line-height: 1.6;
 }
 
+gate-actions {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--unit) * 2);
+}
+
+inspector-meta,
+inspector-controls,
+auth-bar {
+  display: flex;
+  align-items: center;
+  background: oklch(from var(--card) l c h / 0.82);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--unit) * 1.5);
+}
+
 inspector-meta {
   position: fixed;
   top: calc(var(--unit) * 3);
   left: calc(var(--unit) * 3);
   z-index: 10;
-  display: flex;
-  align-items: center;
   gap: calc(var(--unit) * 3);
   padding: calc(var(--unit) * 1.5) calc(var(--unit) * 3);
-  background: oklch(from var(--card) l c h / 0.82);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-  border-radius: calc(var(--unit) * 1.5);
 }
 
 meta-detail {
@@ -75,21 +86,29 @@ meta-detail {
   font-family: var(--font-mono, monospace);
 }
 
-inspector-controls {
+top-right {
   position: fixed;
   top: calc(var(--unit) * 3);
   right: calc(var(--unit) * 3);
   z-index: 10;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  gap: calc(var(--unit) * 2);
+}
+
+inspector-controls {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: calc(var(--unit) * 2);
   padding: calc(var(--unit) * 1.5) calc(var(--unit) * 2);
-  background: oklch(from var(--card) l c h / 0.82);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-  border-radius: calc(var(--unit) * 1.5);
+}
+
+auth-bar {
+  padding: calc(var(--unit) * 1.5);
+}
+
+auth-bar:not(:has(button)) {
+  display: none;
 }
 
 control-group {
