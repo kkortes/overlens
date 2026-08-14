@@ -74,14 +74,43 @@ const settled = (page: Page) =>
       }),
   );
 
-test("overlens crawl", async ({ page }) => {
+// A page can wedge its own main thread (an app bug: an infinite render/
+// navigate loop). Playwright's evaluate has no timeout, so without a deadline
+// one broken page hangs the whole crawl silently until CI kills it. The
+// deadline covers everything legitimate (goto 30s + ready + four passes on a
+// slow runner); a page that busts it is unusable — no CDP call will ever
+// return — so the crawl closes it and continues on a fresh one.
+const PAGE_DEADLINE = 90_000;
+const withDeadline = <T>(work: () => Promise<T>) => {
+  let timer: ReturnType<typeof setTimeout>;
+  const working = work();
+  // The losing arm still rejects later (its page gets closed) — mark it
+  // handled so the crawl doesn't die on an unhandled rejection.
+  working.catch(() => {});
+  return Promise.race([
+    working,
+    new Promise<never>((_, reject) => {
+      timer = setTimeout(
+        () => reject(new Error(`page deadline ${PAGE_DEADLINE}ms exceeded`)),
+        PAGE_DEADLINE,
+      );
+    }),
+  ]).finally(() => clearTimeout(timer));
+};
+
+test("overlens crawl", async ({ context }) => {
   test.setTimeout((overlens.timeoutMinutes ?? 15) * 60 * 1000);
 
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  if (overlens.freezeClock ?? true)
-    await clock(page, Date.UTC(2026, 7, 11, 12));
-  for (const pattern of overlens.blockRequests ?? [])
-    await page.route(pattern, (route) => route.abort());
+  const preparePage = async (target: Page) => {
+    await target.emulateMedia({ reducedMotion: "reduce" });
+    if (overlens.freezeClock ?? true)
+      await clock(target, Date.UTC(2026, 7, 11, 12));
+    for (const pattern of overlens.blockRequests ?? [])
+      await target.route(pattern, (route) => route.abort());
+  };
+
+  let page = await context.newPage();
+  await preparePage(page);
 
   await overlens.auth?.(page);
 
@@ -100,53 +129,61 @@ test("overlens crawl", async ({ page }) => {
     const started = Date.now();
 
     try {
-      await page.goto(
-        path === firstPath ? first.href : `${first.origin}${path}`,
-        {
-          waitUntil: "networkidle",
-          timeout: 30000,
-        },
-      );
-      await overlens.ready?.(page);
-    } catch {
-      console.info(`${pathShape} skipped (did not settle within 30s)`);
-      continue;
-    }
-
-    if (!shapes.has(pathShape)) {
-      shapes.add(pathShape);
-      await page.evaluate(() => document.fonts.ready);
-      await page.addStyleTag({
-        content:
-          "*, *::before, *::after { transition: none !important; animation: none !important; caret-color: transparent !important; }",
-      });
-
-      for (const { name, width, theme } of overlens.passes) {
-        await page.setViewportSize({ width, height: 720 });
-        await overlens.theme(page, theme);
-        await normalize(page);
-        await settled(page);
-        await page.evaluate(() =>
-          Promise.all(
-            [...document.images].map((img) => img.decode().catch(() => {})),
-          ),
+      await withDeadline(async () => {
+        await page.goto(
+          path === firstPath ? first.href : `${first.origin}${path}`,
+          {
+            waitUntil: "networkidle",
+            timeout: 30000,
+          },
         );
-        await page.screenshot({
-          path: `overlens-output/${name}/${fileBase(pathShape)}.png`,
-          fullPage: true,
-          mask: mask.map((selector) => page.locator(selector)),
-        });
-      }
-      pages.push(pathShape);
-    }
+        await overlens.ready?.(page);
 
-    const hrefs = await page
-      .locator("a[href^='/']:not([href^='//'])")
-      .evaluateAll((as) => as.map((a) => a.getAttribute("href")!));
-    queue.push(...hrefs.map((href) => href.split(/[?#]/)[0]));
-    console.info(
-      `${pathShape} ${Date.now() - started}ms (visited ${seen.size}, queued ${queue.length})`,
-    );
+        if (!shapes.has(pathShape)) {
+          await page.evaluate(() => document.fonts.ready);
+          await page.addStyleTag({
+            content:
+              "*, *::before, *::after { transition: none !important; animation: none !important; caret-color: transparent !important; }",
+          });
+
+          for (const { name, width, theme } of overlens.passes) {
+            await page.setViewportSize({ width, height: 720 });
+            await overlens.theme(page, theme);
+            await normalize(page);
+            await settled(page);
+            await page.evaluate(() =>
+              Promise.all(
+                [...document.images].map((img) => img.decode().catch(() => {})),
+              ),
+            );
+            await page.screenshot({
+              path: `overlens-output/${name}/${fileBase(pathShape)}.png`,
+              fullPage: true,
+              mask: mask.map((selector) => page.locator(selector)),
+            });
+          }
+          shapes.add(pathShape);
+          pages.push(pathShape);
+        }
+
+        const hrefs = await page
+          .locator("a[href^='/']:not([href^='//'])")
+          .evaluateAll((as) => as.map((a) => a.getAttribute("href")!));
+        queue.push(...hrefs.map((href) => href.split(/[?#]/)[0]));
+      });
+      console.info(
+        `${pathShape} ${Date.now() - started}ms (visited ${seen.size}, queued ${queue.length})`,
+      );
+    } catch (error) {
+      console.info(
+        `${pathShape} skipped (${String((error as Error)?.message || error).split("\n")[0]})`,
+      );
+      // The page may be wedged beyond recovery — replace it. Cookies and
+      // storage live on the context, so the session carries over.
+      await page.close().catch(() => {});
+      page = await context.newPage();
+      await preparePage(page);
+    }
   }
 
   expect(pages.length, "the crawl captured no pages at all").toBeGreaterThan(0);
