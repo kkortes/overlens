@@ -13,11 +13,8 @@ jobs:
     name: Crawl & Snapshot
     # Production deployments are how the targetBranch gets its baseline crawl.
     if: ${{ github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && github.event.deployment_status.target_url != '' && (contains(github.event.deployment_status.environment, 'Preview') || contains(github.event.deployment_status.environment, 'Production')) }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     runs-on: ubuntu-latest
-    # Keep the tag in lockstep with your @playwright/test version — the image
-    # ships that version's browsers and OS deps.
-    container: mcr.microsoft.com/playwright:v1.60.0-noble
     permissions:
       contents: read
     outputs:
@@ -27,13 +24,6 @@ jobs:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
         with:
           persist-credentials: false
-      - run: apt-get update && apt-get install -y unzip
-      # checkout only marks the workspace safe inside a throwaway HOME, and
-      # this job's container runs as a different uid than the files' owner —
-      # so from here on git sees no repository, and any package whose install
-      # lifecycle shells out to git (a `prepare` hook wiring core.hooksPath,
-      # husky, …) aborts the install.
-      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
       - run: bun install
       - name: Read config flags
@@ -43,12 +33,16 @@ jobs:
         env:
           PLAYWRIGHT_BASE_URL: ${{ github.event.deployment_status.target_url }}
         run: |
-          TARGET=$(bun -e 'console.log((await import("./overlens.config.ts")).default.targetBranch)')
-          case "$TARGET" in ''|undefined) echo "overlens.config.ts must set targetBranch" >&2; exit 1;; esac
+          # Extensionless import — bun resolves overlens.config.ts or .js.
+          TARGET=$(bun -e 'console.log((await import("./overlens.config")).default.targetBranch)')
+          case "$TARGET" in ''|undefined) echo "overlens.config must set targetBranch" >&2; exit 1;; esac
           echo "targetBranch=$TARGET" >> $GITHUB_OUTPUT
-          echo "createPR=$(bun -e 'console.log((((await import("./overlens.config.ts")).default.createPR ?? true) ? "true" : "false"))')" >> $GITHUB_OUTPUT
-      - run: bunx playwright install
-      - run: OVERLENS=1 bunx playwright test overlens.spec.ts
+          echo "createPR=$(bun -e 'console.log((((await import("./overlens.config")).default.createPR ?? true) ? "true" : "false"))')" >> $GITHUB_OUTPUT
+      # No pinned browser container: --with-deps installs the browsers and OS
+      # deps matching the project's own @playwright/test version. The pattern
+      # matches overlens.spec.ts or .js.
+      - run: bunx playwright install --with-deps
+      - run: OVERLENS=1 bunx playwright test overlens.spec
         env:
           PLAYWRIGHT_BASE_URL: ${{ github.event.deployment_status.target_url }}
       - uses: actions/upload-artifact@v4
@@ -58,7 +52,7 @@ jobs:
           path: overlens-output/
 
   publish:
-    name: Create PR
+    name: Publish snapshots
     needs: crawl
     timeout-minutes: 20
     runs-on: ubuntu-latest
