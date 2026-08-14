@@ -254,6 +254,7 @@ pane-note[danger] {
 
 pane-note[stacked] {
   flex-direction: column;
+  font-size: 16px;
 }
 
 variant-jumps {
