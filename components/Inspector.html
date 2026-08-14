@@ -139,6 +139,16 @@
         <compare-pane>
           <!-- if p.cur -->
 
+          <!-- if p.cur.fallback -->
+          <pane-note>
+            Nothing changed in <code>@[view.variant]</code> for this page — showing
+            <code>@[p.cur.key]</code>. Differs in:
+            <!-- each Object.keys(p.variants) as k -->
+            <button sm tertiary onclick="$.jumpVariant('@[k]')">@[k]</button>
+            <!-- /each -->
+          </pane-note>
+          <!-- /if -->
+
           <!-- if p.cur.error -->
           <pane-note danger>@[p.cur.error]</pane-note>
           <!-- /if -->
@@ -207,13 +217,6 @@
           <!-- /if -->
           <!-- /if -->
 
-          <!-- else -->
-          <pane-note>
-            Nothing changed in <code>@[view.variant]</code> for this page — it differs in:
-            <!-- each Object.keys(p.variants) as k -->
-            <button sm tertiary onclick="$.jumpVariant('@[k]')">@[k]</button>
-            <!-- /each -->
-          </pane-note>
           <!-- /if -->
         </compare-pane>
       </section>

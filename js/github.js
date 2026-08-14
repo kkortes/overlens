@@ -135,13 +135,21 @@ const side = async (p, variant, which) => {
   }
 };
 
+// A slide always shows a difference: when the requested variant has no entry
+// for a page, fall back to that page's most-different variant (added/removed
+// count as fully different) and flag it.
+const bestVariant = (p) =>
+  Object.entries(p.variants)
+    .map(([key, v]) => [key, v.status === 'changed' ? v.diffPercent : 100])
+    .sort((a, b) => b[1] - a[1])[0][0];
+
 export const loadVariant = (variant) => {
   for (const p of $.inspector.pages) {
-    const v = p.variants[variant];
-    p.cur = v ? { key: variant, ...v } : null;
-    if (!v) continue;
-    if (v.status !== 'added' && !v.baseUrl) side(p, variant, 'base');
-    if (v.status !== 'removed' && !v.headUrl) side(p, variant, 'head');
+    const shown = p.variants[variant] ? variant : bestVariant(p);
+    const v = p.variants[shown];
+    p.cur = { key: shown, fallback: shown !== variant, ...v };
+    if (v.status !== 'added' && !v.baseUrl) side(p, shown, 'base');
+    if (v.status !== 'removed' && !v.headUrl) side(p, shown, 'head');
   }
 };
 
@@ -167,7 +175,7 @@ const queueDiff = (p, variant) => {
 };
 
 export const ensureDiffs = () => {
-  for (const p of $.inspector.pages) queueDiff(p, $.view.variant);
+  for (const p of $.inspector.pages) if (p.cur) queueDiff(p, p.cur.key);
 };
 
 export const loadInspector = async ({ owner, repo, n }) => {
