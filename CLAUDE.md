@@ -55,8 +55,8 @@ report.json                     overlens/pr-* branches only, at the root
 
 `report.json`: `{ baseSha, sourcePr, sourceSha, pages: [{ file, status,
 diffPercent? }] }` — status `added` | `changed` | `removed`, `diffPercent`
-counting mismatches within the area both images share (a height-only change
-stays `changed` but carries no diffPercent). A missing
+counting mismatches within the area both images share. A page differing only
+in height is not a change and never reaches the report. A missing
 report.json is a hard stop ("re-run Overlens"), not a fallback render. The
 inspector warns with a `base drift` badge when `baseSha` no longer matches the
 `overlens/dev` tip.
