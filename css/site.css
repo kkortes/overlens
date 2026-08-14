@@ -62,7 +62,7 @@ gate-actions {
 
 inspector-meta,
 inspector-controls,
-auth-bar {
+top-right:has(inspector-controls) auth-bar {
   display: flex;
   align-items: center;
   background: oklch(from var(--card) l c h / 0.82);
@@ -104,6 +104,10 @@ inspector-controls {
 }
 
 auth-bar {
+  display: flex;
+}
+
+top-right:has(inspector-controls) auth-bar {
   padding: calc(var(--unit) * 1.5);
 }
 
