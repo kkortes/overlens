@@ -12,9 +12,11 @@ jobs:
   crawl:
     name: Crawl & Snapshot
     # Production deployments are how the targetBranch gets its baseline crawl.
-    if: ${{ github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && (contains(github.event.deployment_status.environment, 'Preview') || contains(github.event.deployment_status.environment, 'Production')) }}
+    if: ${{ github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && github.event.deployment_status.target_url != '' && (contains(github.event.deployment_status.environment, 'Preview') || contains(github.event.deployment_status.environment, 'Production')) }}
     timeout-minutes: 30
     runs-on: ubuntu-latest
+    # Keep the tag in lockstep with your @playwright/test version — the image
+    # ships that version's browsers and OS deps.
     container: mcr.microsoft.com/playwright:v1.60.0-noble
     permissions:
       contents: read
@@ -60,16 +62,21 @@ jobs:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
         with:
           fetch-depth: 0
+          persist-credentials: false
       - run: sudo apt-get update && sudo apt-get install -y imagemagick jq
       - name: Resolve slug
         run: |
           # A deploy can land after a newer push — name-rev then answers
-          # "branch~N"; the branch is the part before the suffix.
+          # "branch~N"; the branch is the part before the suffix, and only
+          # the branch's current tip may publish (a stale deploy must not
+          # roll the snapshots back).
           BRANCH=$(git name-rev --name-only --exclude 'tags/*' $GITHUB_SHA)
           BRANCH="${BRANCH#remotes/origin/}"
           BRANCH="${BRANCH%%[~^]*}"
           echo "BRANCH=$BRANCH" >> $GITHUB_ENV
-          if [ "$BRANCH" = "$TARGET_BRANCH" ]; then
+          if [ "$(git rev-parse -q --verify "origin/$BRANCH" || true)" != "$GITHUB_SHA" ]; then
+            echo "$GITHUB_SHA is no longer the tip of $BRANCH — superseded deploy, skipping"
+          elif [ "$BRANCH" = "$TARGET_BRANCH" ]; then
             echo "SLUG=dev" >> $GITHUB_ENV
           else
             PR=$(gh pr list --head "$BRANCH" --state open --json number -q '.[0].number')
@@ -87,10 +94,12 @@ jobs:
         if: env.SLUG
         run: |
           REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          echo "REMOTE=$REMOTE" >> $GITHUB_ENV
-          # Probe first: a transient clone failure must fail the run, never
-          # masquerade as "no baseline yet" and force-push a fresh history.
-          if git ls-remote "$REMOTE" refs/heads/overlens/dev | grep -q .; then
+          # Probe first: a transient failure aborts here (set -e), it must
+          # never masquerade as "no baseline yet" and force-push a fresh
+          # history over the accumulated one.
+          LS=$(git ls-remote "$REMOTE" refs/heads/overlens/dev)
+          if [ -n "$LS" ]; then
+            echo "DEV_EXISTS=1" >> $GITHUB_ENV
             git clone -q --depth 1 --branch overlens/dev "$REMOTE" /tmp/publish
           else
             git init -q -b "overlens/$SLUG" /tmp/publish
@@ -162,10 +171,9 @@ jobs:
           PCT=$(awk -v c="$CHANGED" -v t="$TOTAL" 'BEGIN{s=sprintf("%.1f", c*100/t); sub(/\.0$/, "", s); printf "%s%%", s}')
           LENS="https://overlens.korte.kim/${GITHUB_REPOSITORY}/pull/${PR}"
           VPR=$(gh pr list --head "overlens/$SLUG" --state open --json url -q '.[0].url')
-          if [ -z "$VPR" ] && [ "$CHANGED" -gt 0 ] && [ "$CREATE_PR" != "false" ] \
-            && git ls-remote --exit-code "$REMOTE" refs/heads/overlens/dev > /dev/null 2>&1; then
+          if [ -z "$VPR" ] && [ "$CHANGED" -gt 0 ] && [ "$CREATE_PR" != "false" ] && [ -n "$DEV_EXISTS" ]; then
             VPR=$(gh pr create --draft --base overlens/dev --head "overlens/$SLUG" \
-              --title "🎭 Overlens" --body "Overlens is preparing the report…")
+              --title "🎭 Overlens" --body "Overlens is preparing the report…") || VPR=""
           fi
           {
             echo "## Summary by Overlens"
