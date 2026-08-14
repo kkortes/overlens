@@ -54,10 +54,9 @@ inspector-state p {
   line-height: 1.6;
 }
 
-gate-actions {
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--unit) * 2);
+inspector-state p[fine] {
+  font-size: 13px;
+  opacity: 0.7;
 }
 
 inspector-meta,

@@ -34,30 +34,26 @@
   <!-- if inspector.phase === 'gate' -->
   <inspector-state>
     <icon lock-closed lg></icon>
-    <h2>Private repo, or no access</h2>
+    <h2>No repo read access</h2>
     <p>
-      Overlens is a read-only lens over a repo's snapshot branches. For private
-      repos it needs you signed in with GitHub and the Overlens app installed
-      on <strong>@[inspector.owner]/@[inspector.repo]</strong> — Contents
-      read-only, revoke anytime.
+      Overlens tried to read information from
+      <a href="https://github.com/@[inspector.owner]/@[inspector.repo]/pull/@[inspector.pr]" primary target="_blank" rel="noopener">github.com/@[inspector.owner]/@[inspector.repo]/pull/@[inspector.pr]</a>.
+      Since it couldn't, either the repo is <em>private</em> or the PR doesn't exist.
     </p>
     <!-- if auth.configured -->
-    <gate-actions>
-      <button primary onclick="$.signIn()"><icon logo-github></icon> Sign in with GitHub</button>
-      <a href="https://github.com/apps/@[auth.appSlug]/installations/new?state=@[page.path]" class="button" primary target="_blank" rel="noopener">
-        <icon download></icon> Install the app on this repo
-      </a>
-    </gate-actions>
+    <!-- if auth.authed -->
+    <p>If the PR is knowingly on a private repo, you need to:</p>
+    <a href="https://github.com/apps/@[auth.appSlug]/installations/new?state=@[page.path]" class="button" primary target="_blank" rel="noopener">
+      <icon download></icon> Install Overlens on that repo
+    </a>
+    <p fine>Proceeding will ask for read-only permissions.</p>
+    <!-- else -->
+    <p muted>You are not signed in — but have to be in order to see this. Sign in at the top right.</p>
+    <!-- /if -->
     <!-- else -->
     <p muted>
       Sign-in isn't available yet — the Overlens GitHub App hasn't been
       registered for this deployment.
-    </p>
-    <!-- /if -->
-    <!-- if auth.authed -->
-    <p muted>
-      You are signed in, but this repo still answered "not found" — the app is
-      probably not installed on it, or the repo doesn't exist.
     </p>
     <!-- /if -->
   </inspector-state>
