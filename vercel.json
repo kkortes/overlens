@@ -1,5 +1,5 @@
 {
-  "buildCommand": "bun run compile",
+  "buildCommand": "bun run compile && cp -r templates compiled/templates",
   "outputDirectory": "compiled",
   "rewrites": [{ "source": "/:path*", "destination": "/index.html" }]
 }

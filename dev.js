@@ -23,6 +23,13 @@ Bun.serve({
     const file = Bun.file(`compiled${decodeURIComponent(pathname)}`);
     if (await file.exists()) return new Response(file);
 
+    // The compiler mirrors only web assets — the deploy's build command
+    // copies /templates/ into the output, and dev serves it from source.
+    if (pathname.startsWith('/templates/')) {
+      const raw = Bun.file(`.${decodeURIComponent(pathname)}`);
+      if (await raw.exists()) return new Response(raw);
+    }
+
     if (!pathname.includes('.')) {
       const shell = Bun.file('compiled/index.html');
       if (await shell.exists()) return new Response(shell);
