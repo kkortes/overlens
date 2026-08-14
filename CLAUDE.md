@@ -34,7 +34,8 @@ GitHub OAuth code, everything else runs in the browser.
   (default), Split (clip-path + drag handle, PR left / base right), Onion
   (opacity slider), 2-up (shared-scale columns). Viewport/theme toggles pick
   the `<viewport>-<theme>/` variant in place; a slide whose page has no diff
-  in the current variant falls back to its most-different variant, flagged.
+  in the current variant renders no comparison — just a centered "Visual
+  regression in" note with device buttons that jump there.
   Both sides always render at the
   same scale, top-aligned, never upscaled past 1:1 — height drift below a
   reflow point is honest by design.

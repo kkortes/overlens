@@ -134,8 +134,7 @@ control-group button:not(:first-child) {
   margin-left: -1px;
 }
 
-inspector-controls button[active],
-variant-jumps button[active] {
+inspector-controls button[active] {
   background: var(--accent);
   color: var(--accent-foreground);
   border-color: var(--accent-foreground);
@@ -193,6 +192,12 @@ compare-pane {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: calc(var(--unit) * 3);
+}
+
+compare-pane:has(pane-note[stacked]) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 pane-note {

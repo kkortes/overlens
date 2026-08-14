@@ -135,21 +135,15 @@ const side = async (p, variant, which) => {
   }
 };
 
-// A slide always shows a difference: when the requested variant has no entry
-// for a page, fall back to that page's most-different variant (added/removed
-// count as fully different) and flag it.
-const bestVariant = (p) =>
-  Object.entries(p.variants)
-    .map(([key, v]) => [key, v.status === 'changed' ? v.diffPercent : 100])
-    .sort((a, b) => b[1] - a[1])[0][0];
-
+// A page with no entry for the requested variant renders nothing — just a
+// pointer to the devices that do differ (p.cur.fallback in the template).
 export const loadVariant = (variant) => {
   for (const p of $.inspector.pages) {
-    const shown = p.variants[variant] ? variant : bestVariant(p);
-    const v = p.variants[shown];
-    p.cur = { key: shown, fallback: shown !== variant, ...v };
-    if (v.status !== 'added' && !v.baseUrl) side(p, shown, 'base');
-    if (v.status !== 'removed' && !v.headUrl) side(p, shown, 'head');
+    const v = p.variants[variant];
+    p.cur = v ? { key: variant, fallback: false, ...v } : { key: variant, fallback: true };
+    if (!v) continue;
+    if (v.status !== 'added' && !v.baseUrl) side(p, variant, 'base');
+    if (v.status !== 'removed' && !v.headUrl) side(p, variant, 'head');
   }
   if ($.view.mode === 'difference') ensureDiffs();
 };

@@ -40,6 +40,11 @@ export default {
     Object.assign(this.view, { viewport, theme, variant });
     loadVariant(variant);
   },
+  jumpDevice(name, viewport) {
+    const { variants } = this.inspector.pages.find((p) => p.name === name);
+    const same = `${viewport}-${this.view.theme}`;
+    this.jumpVariant(variants[same] ? same : Object.keys(variants).find((k) => k.startsWith(viewport)));
+  },
   setViewport(viewport) {
     this.jumpVariant(`${viewport}-${this.view.theme}`);
   },

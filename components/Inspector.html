@@ -142,10 +142,9 @@
           <pane-note stacked>
             Visual regression in
             <variant-jumps>
-              <!-- each Object.keys(p.variants) as k -->
-              <button secondary active="@[k === p.cur.key]" onclick="$.jumpVariant('@[k]')" title="@[k]">
-                <icon class="@[k.startsWith('mobile') ? 'smartphone' : 'desktop']"></icon>
-                <icon class="@[k.split('-')[1]]"></icon>
+              <!-- each [...new Set(Object.keys(p.variants).map(k => k.split('-')[0]))] as vp -->
+              <button secondary onclick="$.jumpDevice('@[p.name]', '@[vp]')" title="@[vp]">
+                <icon class="@[vp === 'mobile' ? 'smartphone' : 'desktop']"></icon>
               </button>
               <!-- /each -->
             </variant-jumps>
