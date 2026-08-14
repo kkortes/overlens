@@ -19,7 +19,7 @@
     <!-- if auth.configured -->
     <crow g-3>
       <button primary onclick="$.signIn()"><icon logo-github></icon> Sign in with GitHub</button>
-      <a href="https://github.com/apps/@[auth.appSlug]/installations/new" secondary target="_blank" rel="noopener">
+      <a href="https://github.com/apps/@[auth.appSlug]/installations/new?state=@[page.path]" secondary target="_blank" rel="noopener">
         Install the app on this repo
       </a>
     </crow>
