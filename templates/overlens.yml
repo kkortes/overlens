@@ -142,12 +142,7 @@ jobs:
               /tmp/report-pages.jsonl > report.json
             git add report.json
           fi
-          if [ "$SLUG" = "dev" ]; then
-            if git diff --cached --quiet; then exit 0; fi
-          elif ! grep -q . /tmp/staged.txt \
-            && ! git ls-remote --exit-code "$REMOTE" "refs/heads/overlens/$SLUG" > /dev/null 2>&1; then
-            exit 0
-          fi
+          if git diff --cached --quiet; then exit 0; fi
           git commit -q -m "$BRANCH @ ${GITHUB_SHA::7}"
           git push -qf "$REMOTE" "HEAD:refs/heads/overlens/$SLUG"
       - name: Report to the source PR
@@ -155,8 +150,6 @@ jobs:
         env:
           CREATE_PR: ${{ needs.crawl.outputs.createPR }}
         run: |
-          BRANCH_EXISTS=""
-          if git ls-remote --exit-code "$REMOTE" "refs/heads/overlens/$SLUG" > /dev/null 2>&1; then BRANCH_EXISTS=1; fi
           CH=$(cut -f2 /tmp/staged.txt | sed -E 's|^[^/]+/||; s/\.png$//' | sort -u | tr '\n' ' ')
           CHANGED=$(echo "$CH" | wc -w | tr -d ' ')
           awk -F'\t' '$1=="D"{print $2}' /tmp/staged.txt | sed -E 's|^[^/]+/||; s/\.png$//' | sort -u > /tmp/removed-bases.txt
@@ -169,7 +162,7 @@ jobs:
           PCT=$(awk -v c="$CHANGED" -v t="$TOTAL" 'BEGIN{s=sprintf("%.1f", c*100/t); sub(/\.0$/, "", s); printf "%s%%", s}')
           LENS="https://overlens.korte.kim/${GITHUB_REPOSITORY}/pull/${PR}"
           VPR=$(gh pr list --head "overlens/$SLUG" --state open --json url -q '.[0].url')
-          if [ -z "$VPR" ] && [ "$CHANGED" -gt 0 ] && [ -n "$BRANCH_EXISTS" ] && [ "$CREATE_PR" != "false" ] \
+          if [ -z "$VPR" ] && [ "$CHANGED" -gt 0 ] && [ "$CREATE_PR" != "false" ] \
             && git ls-remote --exit-code "$REMOTE" refs/heads/overlens/dev > /dev/null 2>&1; then
             VPR=$(gh pr create --draft --base overlens/dev --head "overlens/$SLUG" \
               --title "🎭 Overlens" --body "Overlens is preparing the report…")
@@ -181,10 +174,8 @@ jobs:
               printf '🎭 Visual differences detected — %s of all pages have diffs. ' "$PCT"
               if [ -n "$VPR" ]; then printf '[PR was filed](%s) · ' "$VPR"; fi
               echo "[View on Overlens]($LENS)"
-            elif [ -n "$BRANCH_EXISTS" ]; then
-              echo "✅ No visual differences. [View on Overlens]($LENS)"
             else
-              echo "✅ No visual differences."
+              echo "✅ No visual differences. [View on Overlens]($LENS)"
             fi
           } > /tmp/summary.md
           gh pr view "$PR" --json body -q .body > /tmp/src-body.md
