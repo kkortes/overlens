@@ -28,6 +28,12 @@ jobs:
         with:
           persist-credentials: false
       - run: apt-get update && apt-get install -y unzip
+      # checkout only marks the workspace safe inside a throwaway HOME, and
+      # this job's container runs as a different uid than the files' owner —
+      # so from here on git sees no repository, and any package whose install
+      # lifecycle shells out to git (a `prepare` hook wiring core.hooksPath,
+      # husky, …) aborts the install.
+      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
       - run: bun install
       - name: Read config flags
@@ -275,7 +281,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - run: gh api -X DELETE "repos/${{ github.repository }}/git/refs/heads/overlens/pr-${{ github.event.pull_request.number }}" || true
+      - run: |
+          # Deleting the head branch normally auto-closes the PR, but GitHub
+          # treats that as best-effort and can drop it in the post-merge
+          # burst, leaving a zombie PR — so close it explicitly first.
+          PR=$(gh pr list -R "$GITHUB_REPOSITORY" --head "overlens/pr-${{ github.event.pull_request.number }}" --state open --json number -q '.[0].number')
+          [ -z "$PR" ] || gh pr close -R "$GITHUB_REPOSITORY" "$PR"
+          gh api -X DELETE "repos/${{ github.repository }}/git/refs/heads/overlens/pr-${{ github.event.pull_request.number }}" || true

@@ -11,6 +11,9 @@ export type OverlensConfig = {
   targetBranch: string;
   passes: OverlensPass[];
   theme: (page: Page, theme: OverlensPass["theme"]) => Promise<unknown>;
+  auth?: (page: Page) => Promise<unknown>;
+  ready?: (page: Page) => Promise<unknown>;
+  timeoutMinutes?: number;
   blockRequests?: RegExp[];
   freezeClock?: boolean;
   shape?: (path: string) => string;
@@ -38,6 +41,21 @@ const config: OverlensConfig = {
       (dark) => document.documentElement.classList.toggle("dark", dark),
       theme === "dark",
     ),
+  // Runs once before the crawl, in the context every page is then visited in.
+  // Log in however a person would; the session carries through the whole crawl.
+  // auth: async (page) => {
+  //   await page.goto(`${base}/login`);
+  //   await page.locator('input[name="email"]').fill(EMAIL);
+  //   await page.locator('input[name="password"]').fill(PASSWORD);
+  //   await page.locator('button[type="submit"]').click();
+  // },
+  // Runs after every navigation. `networkidle` says nothing about a websocket
+  // or a client-side fetch, so an app that paints a spinner first needs to say
+  // when it's actually done — otherwise that spinner is what gets screenshot.
+  // ready: (page) => page.waitForFunction(() => window.appReady === true),
+  // The crawl's budget, 15 minutes by default. Raise it for a big site: full
+  // page shots of tall pages add up, and a 2-vCPU runner is no workstation.
+  // timeoutMinutes: 45,
 };
 
 export default config;

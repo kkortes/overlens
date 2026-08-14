@@ -75,13 +75,15 @@ const settled = (page: Page) =>
   );
 
 test("overlens crawl", async ({ page }) => {
-  test.setTimeout(15 * 60 * 1000);
+  test.setTimeout((overlens.timeoutMinutes ?? 15) * 60 * 1000);
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   if (overlens.freezeClock ?? true)
     await clock(page, Date.UTC(2026, 7, 11, 12));
   for (const pattern of overlens.blockRequests ?? [])
     await page.route(pattern, (route) => route.abort());
+
+  await overlens.auth?.(page);
 
   const first = new URL(overlens.firstPageToVisit);
   const firstPath = first.pathname.replace(/\/$/, "") || "/";
@@ -105,6 +107,7 @@ test("overlens crawl", async ({ page }) => {
           timeout: 30000,
         },
       );
+      await overlens.ready?.(page);
     } catch {
       console.info(`${pathShape} skipped (did not settle within 30s)`);
       continue;
