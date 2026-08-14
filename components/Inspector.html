@@ -16,12 +16,19 @@
       on <strong>@[inspector.owner]/@[inspector.repo]</strong> — Contents
       read-only, revoke anytime.
     </p>
+    <!-- if auth.configured -->
     <crow g-3>
       <button primary onclick="$.signIn()"><icon logo-github></icon> Sign in with GitHub</button>
-      <a href="https://github.com/apps/overlens/installations/new" secondary target="_blank" rel="noopener">
+      <a href="https://github.com/apps/@[auth.appSlug]/installations/new" secondary target="_blank" rel="noopener">
         Install the app on this repo
       </a>
     </crow>
+    <!-- else -->
+    <p muted>
+      Sign-in isn't available yet — the Overlens GitHub App hasn't been
+      registered for this deployment.
+    </p>
+    <!-- /if -->
     <!-- if auth.authed -->
     <p muted>
       You are signed in, but this repo still answered "not found" — the app is

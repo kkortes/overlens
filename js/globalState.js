@@ -1,3 +1,4 @@
+import config from '/js/config.js';
 import { loadVariant, ensureDiffs, signIn, signOut } from '/js/github.js';
 
 export default {
@@ -24,6 +25,8 @@ export default {
   },
   auth: {
     authed: !!localStorage.getItem('overlens-token'),
+    configured: !!config.clientId,
+    appSlug: config.appSlug,
     error: '',
   },
 
