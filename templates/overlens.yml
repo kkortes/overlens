@@ -32,6 +32,10 @@ jobs:
       - run: bun install
       - name: Read config flags
         id: flags
+        # The config may derive values from the deploy URL at import time, so
+        # it gets the same env the crawl runs under.
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ github.event.deployment_status.target_url }}
         run: |
           TARGET=$(bun -e 'console.log((await import("./overlens.config.ts")).default.targetBranch)')
           case "$TARGET" in ''|undefined) echo "overlens.config.ts must set targetBranch" >&2; exit 1;; esac
