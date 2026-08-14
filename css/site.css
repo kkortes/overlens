@@ -327,9 +327,23 @@ two-up figcaption {
 landing-page {
   display: flex;
   justify-content: center;
+  align-items: safe center;
   min-height: 100dvh;
   padding: calc(var(--unit) * 12) calc(var(--unit) * 6);
   box-sizing: border-box;
+}
+
+a[logo-text] {
+  align-self: center;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+a[logo-text]:hover {
+  color: var(--accent-lens);
 }
 
 landing-hero {
