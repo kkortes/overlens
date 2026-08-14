@@ -60,7 +60,7 @@ jobs:
   publish:
     name: Create PR
     needs: crawl
-    timeout-minutes: 10
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -73,7 +73,11 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - run: sudo apt-get update && sudo apt-get install -y imagemagick jq
+      # The hosted image usually ships both; a cold apt run here has eaten
+      # 9+ minutes of mirror roulette, so only install what's missing.
+      - run: |
+          command -v compare >/dev/null && command -v jq >/dev/null \
+            || (sudo apt-get update && sudo apt-get install -y imagemagick jq)
       - name: Resolve slug
         run: |
           # A deploy can land after a newer push — name-rev then answers
