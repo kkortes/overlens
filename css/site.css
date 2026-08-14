@@ -56,6 +56,10 @@ inspector-state icon {
   opacity: 0.7;
 }
 
+inspector-state icon[checkmark] {
+  --color: var(--green);
+}
+
 inspector-state p {
   max-width: 520px;
   color: var(--muted-foreground);
@@ -167,20 +171,19 @@ red-dot {
   box-shadow: 0 0 6px var(--diff-red);
 }
 
-slides[scrollbar],
-compare-pane {
+body {
   scrollbar-color: oklch(from var(--foreground) l c h / 0.2) oklch(from var(--foreground) l c h / 0.08);
 }
 
-:is(slides[scrollbar], compare-pane)::-webkit-scrollbar {
+::-webkit-scrollbar {
   width: calc(var(--unit) * 2.5);
 }
 
-:is(slides[scrollbar], compare-pane)::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: oklch(from var(--foreground) l c h / 0.08);
 }
 
-:is(slides[scrollbar], compare-pane)::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   background: oklch(from var(--foreground) l c h / 0.2);
   border-radius: 999px;
   border: 2px solid var(--background);
@@ -494,6 +497,10 @@ guide-head {
   gap: calc(var(--unit) * 3);
 }
 
+guide-head button {
+  padding: calc(var(--unit) * 2);
+}
+
 guide-head h2,
 guide-step h3 {
   margin: 0;
@@ -501,9 +508,9 @@ guide-step h3 {
 
 guide-modal p {
   margin: 0;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.7;
-  color: var(--muted-foreground);
+  color: oklch(from var(--muted-foreground) calc(l - 0.08 * var(--theme-sign)) c h);
 }
 
 guide-step {
