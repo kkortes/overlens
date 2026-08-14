@@ -22,16 +22,19 @@
     <hint-banner danger><icon cross></icon> Sign-in failed: @[auth.error]</hint-banner>
     <!-- /if -->
 
+    <crow g-3>
+      <a href="/kkortes/overlens-fixture/pull/1" class="button" primary>
+        <icon eye></icon> Preview example
+      </a>
+      <button secondary onclick="$.modal = 'how'">How does it work?</button>
+      <button secondary onclick="$.modal = 'install'">Installation</button>
+    </crow>
+
     <url-sample>overlens.korte.kim<strong>/{owner}/{repo}/pull/{number}</strong></url-sample>
 
     <landing-shot>
       <img src="/assets/inspector.png" alt="The Overlens inspector comparing two screenshots in Split mode" />
     </landing-shot>
-
-    <crow g-3>
-      <button secondary onclick="$.modal = 'how'">How does it work?</button>
-      <button secondary onclick="$.modal = 'install'">Installation</button>
-    </crow>
   </landing-hero>
 
   <component src="/components/Modal.html" when="@[modal === 'how']">
