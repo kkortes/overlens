@@ -1,4 +1,24 @@
 <overlens-inspector>
+  <top-left>
+    <a href="/" logo-text>Overlens</a>
+    <!-- if inspector.phase === 'ready' -->
+    <inspector-meta>
+      <a href="https://github.com/@[inspector.owner]/@[inspector.repo]/pull/@[inspector.pr]" target="_blank" rel="noopener" tertiary>
+        <icon logo-github></icon> @[inspector.owner]/@[inspector.repo] #@[inspector.pr]
+      </a>
+      <meta-detail>
+        @[inspector.pages.length] page@[inspector.pages.length === 1 ? '' : 's'] ·
+        @[inspector.headSha.slice(0, 7)] vs @[inspector.baseSha.slice(0, 7)]
+      </meta-detail>
+      <!-- if inspector.drift -->
+      <badge bg-orange text-orange title="overlens/dev has moved since this report was generated — the base you see is today's tip, not the one the percentages were computed against. Re-run Overlens on the PR to refresh.">
+        base drift
+      </badge>
+      <!-- /if -->
+    </inspector-meta>
+    <!-- /if -->
+  </top-left>
+
   <top-right>
     <!-- if inspector.phase === 'ready' -->
     <inspector-controls>
@@ -22,7 +42,6 @@
     </inspector-controls>
     <!-- /if -->
     <component src="/components/AuthBar.html"></component>
-    <a href="/" logo-text>Overlens</a>
   </top-right>
 
   <!-- if inspector.phase === 'loading' -->
@@ -105,21 +124,6 @@
   <!-- /if -->
 
   <!-- if inspector.phase === 'ready' -->
-  <inspector-meta>
-    <a href="https://github.com/@[inspector.owner]/@[inspector.repo]/pull/@[inspector.pr]" target="_blank" rel="noopener" tertiary>
-      <icon logo-github></icon> @[inspector.owner]/@[inspector.repo] #@[inspector.pr]
-    </a>
-    <meta-detail>
-      @[inspector.pages.length] page@[inspector.pages.length === 1 ? '' : 's'] ·
-      @[inspector.headSha.slice(0, 7)] vs @[inspector.baseSha.slice(0, 7)]
-    </meta-detail>
-    <!-- if inspector.drift -->
-    <badge bg-orange text-orange title="overlens/dev has moved since this report was generated — the base you see is today's tip, not the one the percentages were computed against. Re-run Overlens on the PR to refresh.">
-      base drift
-    </badge>
-    <!-- /if -->
-  </inspector-meta>
-
   <carousel>
     <slides y scrollbar>
       <!-- each inspector.pages as p (p.name) -->
@@ -127,12 +131,12 @@
         <slide-header>
           <h2>@[p.pretty]</h2>
           <!-- if p.cur -->
-          <!-- if p.cur.status === 'added' --><badge bg-green text-green>added</badge><!-- /if -->
-          <!-- if p.cur.status === 'changed' --><badge bg-orange text-orange>changed</badge><!-- /if -->
-          <!-- if p.cur.status === 'removed' --><badge bg-red text-red>removed</badge><!-- /if -->
           <!-- if p.cur.diffPercent -->
           <diff-percent>@[p.cur.diffPercent]% of union area</diff-percent>
           <!-- /if -->
+          <!-- if p.cur.status === 'added' --><badge bg-green text-green>Added</badge><!-- /if -->
+          <!-- if p.cur.status === 'changed' --><badge bg-orange text-orange>Changed</badge><!-- /if -->
+          <!-- if p.cur.status === 'removed' --><badge bg-red text-red>Removed</badge><!-- /if -->
           <!-- /if -->
         </slide-header>
 

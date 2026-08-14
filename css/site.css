@@ -1,8 +1,16 @@
 @import url('/css/stylecheat.css');
 
+@font-face {
+  font-family: 'Syne';
+  font-weight: 700 800;
+  font-display: swap;
+  src: url('/assets/fonts/syne.woff2') format('woff2');
+}
+
 :root {
   --accent-lens: oklch(0.78 0.14 75);
   --diff-red: oklch(0.62 0.24 27);
+  --font-display: 'Syne', var(--font-sans, system-ui, sans-serif);
 }
 
 html,
@@ -70,11 +78,17 @@ top-right:has(inspector-controls) auth-bar {
   border-radius: calc(var(--unit) * 1.5);
 }
 
-inspector-meta {
+top-left {
   position: fixed;
   top: calc(var(--unit) * 3);
   left: calc(var(--unit) * 3);
   z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--unit) * 3);
+}
+
+inspector-meta {
   gap: calc(var(--unit) * 3);
   padding: calc(var(--unit) * 1.5) calc(var(--unit) * 3);
 }
@@ -197,6 +211,10 @@ diff-percent {
   font-size: 13px;
   color: var(--muted-foreground);
   font-family: var(--font-mono, monospace);
+}
+
+slide-header badge {
+  margin-left: auto;
 }
 
 compare-pane {
@@ -335,8 +353,9 @@ landing-page {
 
 a[logo-text] {
   align-self: center;
-  font-size: 18px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--foreground);
   text-decoration: none;
@@ -356,8 +375,9 @@ landing-hero {
 }
 
 overlens-mark {
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
+  margin-bottom: calc(var(--unit) * -1);
   border-radius: 100%;
   border: 3px solid var(--accent-lens);
   box-shadow:
@@ -369,8 +389,10 @@ overlens-mark {
 
 landing-hero h1 {
   margin: 0;
-  font-size: 44px;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-size: 54px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   color: var(--foreground);
 }
 
@@ -414,8 +436,34 @@ url-sample strong {
   font-weight: 600;
 }
 
+url-sample {
+  perspective: 600px;
+}
+
+sample-flip {
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 500ms;
+}
+
+sample-face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  white-space: nowrap;
+  text-align: center;
+}
+
+sample-face[back] {
+  transform: rotateX(180deg);
+}
+
+crow:has(a[preview]:hover) + url-sample sample-flip {
+  transform: rotateX(180deg);
+}
+
 landing-shot {
   display: block;
+  margin-top: calc(var(--unit) * 3);
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) * 1.5);
   overflow: hidden;

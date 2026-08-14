@@ -1,7 +1,9 @@
 <landing-page>
+  <top-left>
+    <a href="/" logo-text>Overlens</a>
+  </top-left>
   <top-right>
     <component src="/components/AuthBar.html"></component>
-    <a href="/" logo-text>Overlens</a>
   </top-right>
   <landing-hero>
     <overlens-mark aria-hidden="true"></overlens-mark>
@@ -24,14 +26,19 @@
     <!-- /if -->
 
     <crow g-3>
-      <a href="/kkortes/overlens-fixture/pull/1" class="button" primary>
+      <a href="/kkortes/overlens-fixture/pull/1" class="button" primary preview>
         <icon eye></icon> Preview example
       </a>
       <button secondary onclick="$.modal = 'how'">How does it work?</button>
       <button secondary onclick="$.modal = 'install'">Installation</button>
     </crow>
 
-    <url-sample>overlens.korte.kim<strong>/{owner}/{repo}/pull/{number}</strong></url-sample>
+    <url-sample>
+      <sample-flip>
+        <sample-face>overlens.korte.kim<strong>/{owner}/{repo}/pull/{number}</strong></sample-face>
+        <sample-face back>overlens.korte.kim<strong>/kkortes/overlens-fixture/pull/1</strong></sample-face>
+      </sample-flip>
+    </url-sample>
 
     <landing-shot>
       <img src="/assets/inspector.png" alt="The Overlens inspector comparing two screenshots in Split mode" />
