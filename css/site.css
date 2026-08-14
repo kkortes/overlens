@@ -1,16 +1,16 @@
 @import url('/css/stylecheat.css');
 
 @font-face {
-  font-family: 'Syne';
-  font-weight: 700 800;
+  font-family: 'Space Grotesk';
+  font-weight: 500 600;
   font-display: swap;
-  src: url('/assets/fonts/syne.woff2') format('woff2');
+  src: url('/assets/fonts/space-grotesk.woff2') format('woff2');
 }
 
 :root {
   --accent-lens: oklch(0.78 0.14 75);
   --diff-red: oklch(0.62 0.24 27);
-  --font-display: 'Syne', var(--font-sans, system-ui, sans-serif);
+  --font-display: 'Space Grotesk', var(--font-sans, system-ui, sans-serif);
 }
 
 html,
@@ -355,7 +355,7 @@ a[logo-text] {
   align-self: center;
   font-family: var(--font-display);
   font-size: 19px;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--foreground);
   text-decoration: none;
@@ -391,7 +391,7 @@ landing-hero h1 {
   margin: 0;
   font-family: var(--font-display);
   font-size: 54px;
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: -0.03em;
   color: var(--foreground);
 }
@@ -531,8 +531,8 @@ step-no {
 }
 
 guide-modal [codie] {
-  max-height: 360px;
-  overflow: auto;
+  overflow-x: auto;
   border: 1px solid var(--border);
   border-radius: calc(var(--unit) * 1);
+  font-size: 12px;
 }
