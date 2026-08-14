@@ -54,6 +54,11 @@
   <!-- if inspector.phase === 'gate' -->
   <inspector-state>
     <icon lock-closed lg></icon>
+    <!-- if auth.configured && !auth.authed -->
+    <h2>Sign in is required</h2>
+    <p>Since this repo is private, you need to sign in in order for Overlens to inspect it.</p>
+    <p fine>Use the Sign in button at the top right.</p>
+    <!-- else -->
     <h2>No repo read access</h2>
     <p>
       Overlens tried to read information from
@@ -61,20 +66,17 @@
       Since it couldn't, either the repo is <em>private</em> or the PR doesn't exist.
     </p>
     <!-- if auth.configured -->
-    <!-- if auth.authed -->
     <p>If the PR is knowingly on a private repo, you need to:</p>
     <a href="https://github.com/apps/@[auth.appSlug]/installations/new?state=@[page.path]" class="button" primary target="_blank" rel="noopener">
       <icon download></icon> Install Overlens on that repo
     </a>
     <p fine>Proceeding will ask for read-only permissions.</p>
     <!-- else -->
-    <p muted>You are not signed in — but have to be in order to see this. Sign in at the top right.</p>
-    <!-- /if -->
-    <!-- else -->
     <p muted>
       Sign-in isn't available yet — the Overlens GitHub App hasn't been
       registered for this deployment.
     </p>
+    <!-- /if -->
     <!-- /if -->
   </inspector-state>
   <!-- /if -->
