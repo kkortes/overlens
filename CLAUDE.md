@@ -29,8 +29,8 @@ GitHub OAuth code, everything else runs in the browser.
 - **[js/diff.js](js/diff.js)** — the Difference mode: canvas pixel diff over
   the union of both images (~2% per-channel fuzz, like the workflow), red over
   a dimmed base, computed lazily and cached per (page, variant). Area only one
-  image covers (height deltas) renders dimmed, never red — the workflow's
-  diffPercent still counts it.
+  image covers (height deltas) renders dimmed, never red — matching the
+  workflow's diffPercent, which only counts the shared area.
 - **[components/Inspector.html](components/Inspector.html)** — stylecheat
   fullpage vertical carousel, one slide per page. One mode group: Difference
   (default), Split (clip-path + drag handle, PR left / base right), Onion
@@ -55,7 +55,8 @@ report.json                     overlens/pr-* branches only, at the root
 
 `report.json`: `{ baseSha, sourcePr, sourceSha, pages: [{ file, status,
 diffPercent? }] }` — status `added` | `changed` | `removed`, `diffPercent`
-normalized by the union area of both images (height deltas count). A missing
+counting mismatches within the area both images share (a height-only change
+stays `changed` but carries no diffPercent). A missing
 report.json is a hard stop ("re-run Overlens"), not a fallback render. The
 inspector warns with a `base drift` badge when `baseSha` no longer matches the
 `overlens/dev` tip.

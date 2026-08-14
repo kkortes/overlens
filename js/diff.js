@@ -2,8 +2,8 @@
 // pixels (per-channel tolerance ~2%, like the workflow's fuzz) paint red over
 // a dimmed base. Areas only one image covers — height or width deltas — are
 // no comparison at all: they render dimmed like matching pixels, so only
-// overlapping content can go red. (The workflow's diffPercent still counts
-// height deltas — the badge and this view answer different questions.)
+// overlapping content can go red — mirroring the workflow's diffPercent,
+// which counts mismatches within the shared area only.
 const TOLERANCE = 255 * 0.02;
 
 export default async (baseBlob, headBlob) => {
