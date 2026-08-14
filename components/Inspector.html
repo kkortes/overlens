@@ -84,7 +84,7 @@
 
   <!-- if inspector.phase === 'ready' -->
   <inspector-meta>
-    <a href="https://github.com/@[inspector.owner]/@[inspector.repo]/pull/@[inspector.pr]" target="_blank" rel="noopener" tertiary sm>
+    <a href="https://github.com/@[inspector.owner]/@[inspector.repo]/pull/@[inspector.pr]" target="_blank" rel="noopener" tertiary>
       <icon logo-github></icon> @[inspector.owner]/@[inspector.repo] #@[inspector.pr]
     </a>
     <meta-detail>
@@ -99,25 +99,23 @@
   </inspector-meta>
 
   <inspector-controls>
-    <control-group inert="@[view.difference]">
-      <button sm secondary active="@[view.mode === 'split']" onclick="$.setMode('split')">Split</button>
-      <button sm secondary active="@[view.mode === 'onion']" onclick="$.setMode('onion')">Onion</button>
-      <button sm secondary active="@[view.mode === 'twoup']" onclick="$.setMode('twoup')">2-up</button>
+    <control-group>
+      <button secondary active="@[view.mode === 'difference']" onclick="$.setMode('difference')" title="Pixel-level difference of the current pair"><red-dot></red-dot> Difference</button>
+      <button secondary active="@[view.mode === 'split']" onclick="$.setMode('split')">Split</button>
+      <button secondary active="@[view.mode === 'onion']" onclick="$.setMode('onion')">Onion</button>
+      <button secondary active="@[view.mode === 'twoup']" onclick="$.setMode('twoup')">2-up</button>
     </control-group>
     <!-- if view.mode === 'onion' -->
-    <input type="range" min="0" max="100" value="@[view.onion]" oninput="$.view.onion = +this.value" inert="@[view.difference]" title="Blend base and PR" />
+    <input type="range" min="0" max="100" value="@[view.onion]" oninput="$.view.onion = +this.value" title="Blend base and PR" />
     <!-- /if -->
     <control-group>
-      <button sm secondary active="@[view.viewport === 'desktop']" onclick="$.setViewport('desktop')" title="Desktop viewport"><icon desktop></icon></button>
-      <button sm secondary active="@[view.viewport === 'mobile']" onclick="$.setViewport('mobile')" title="Smartphone viewport"><icon smartphone></icon></button>
+      <button secondary active="@[view.viewport === 'desktop']" onclick="$.setViewport('desktop')" title="Desktop viewport"><icon desktop></icon></button>
+      <button secondary active="@[view.viewport === 'mobile']" onclick="$.setViewport('mobile')" title="Smartphone viewport"><icon smartphone></icon></button>
     </control-group>
     <control-group>
-      <button sm secondary active="@[view.theme === 'light']" onclick="$.setTheme('light')" title="Light theme"><icon light></icon></button>
-      <button sm secondary active="@[view.theme === 'dark']" onclick="$.setTheme('dark')" title="Dark theme"><icon dark></icon></button>
+      <button secondary active="@[view.theme === 'light']" onclick="$.setTheme('light')" title="Light theme"><icon light></icon></button>
+      <button secondary active="@[view.theme === 'dark']" onclick="$.setTheme('dark')" title="Dark theme"><icon dark></icon></button>
     </control-group>
-    <button sm secondary active="@[view.difference]" onclick="$.toggleDifference()" title="Pixel-level difference of the current pair">
-      <red-dot></red-dot> Difference
-    </button>
   </inspector-controls>
 
   <carousel>
@@ -140,12 +138,16 @@
           <!-- if p.cur -->
 
           <!-- if p.cur.fallback -->
-          <pane-note>
-            Nothing changed in <code>@[view.variant]</code> for this page — showing
-            <code>@[p.cur.key]</code>. Differs in:
-            <!-- each Object.keys(p.variants) as k -->
-            <button sm tertiary onclick="$.jumpVariant('@[k]')">@[k]</button>
-            <!-- /each -->
+          <pane-note stacked>
+            Visual regression in
+            <variant-jumps>
+              <!-- each Object.keys(p.variants) as k -->
+              <button secondary active="@[k === p.cur.key]" onclick="$.jumpVariant('@[k]')" title="@[k]">
+                <icon class="@[k.startsWith('mobile') ? 'smartphone' : 'desktop']"></icon>
+                <icon class="@[k.split('-')[1]]"></icon>
+              </button>
+              <!-- /each -->
+            </variant-jumps>
           </pane-note>
           <!-- /if -->
 
@@ -172,7 +174,7 @@
           <!-- /if -->
 
           <!-- if p.cur.status === 'changed' -->
-          <!-- if view.difference -->
+          <!-- if view.mode === 'difference' -->
           <!-- if p.cur.diffUrl -->
           <compare-single>
             <img src="@[p.cur.diffUrl]" style="width: @[imgWidth(p.cur, 'diff')]" alt="Pixel difference of @[p.pretty]" />

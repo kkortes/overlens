@@ -30,9 +30,9 @@ GitHub OAuth code, everything else runs in the browser.
   the union of both images (~2% per-channel fuzz, like the workflow), red over
   a dimmed base, computed lazily and cached per (page, variant).
 - **[components/Inspector.html](components/Inspector.html)** — stylecheat
-  fullpage vertical carousel, one slide per page. Split (clip-path + drag
-  handle, PR left / base right), Onion (opacity slider), 2-up (shared-scale
-  columns), Difference (mode group goes `inert`). Viewport/theme toggles pick
+  fullpage vertical carousel, one slide per page. One mode group: Difference
+  (default), Split (clip-path + drag handle, PR left / base right), Onion
+  (opacity slider), 2-up (shared-scale columns). Viewport/theme toggles pick
   the `<viewport>-<theme>/` variant in place; a slide whose page has no diff
   in the current variant falls back to its most-different variant, flagged.
   Both sides always render at the

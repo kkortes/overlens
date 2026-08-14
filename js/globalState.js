@@ -6,8 +6,7 @@ export default {
     viewport: 'desktop',
     theme: 'light',
     variant: 'desktop-light',
-    mode: 'split',
-    difference: false,
+    mode: 'difference',
     onion: 50,
     split: 50,
   },
@@ -40,7 +39,6 @@ export default {
     const [viewport, theme] = variant.split('-');
     Object.assign(this.view, { viewport, theme, variant });
     loadVariant(variant);
-    if (this.view.difference) ensureDiffs();
   },
   setViewport(viewport) {
     this.jumpVariant(`${viewport}-${this.view.theme}`);
@@ -50,10 +48,7 @@ export default {
   },
   setMode(mode) {
     this.view.mode = mode;
-  },
-  toggleDifference() {
-    this.view.difference = !this.view.difference;
-    if (this.view.difference) ensureDiffs();
+    if (mode === 'difference') ensureDiffs();
   },
   dragSplit(e) {
     e.preventDefault();

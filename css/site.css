@@ -17,6 +17,16 @@ body {
   font-family: var(--font-sans, system-ui, sans-serif);
 }
 
+/* stylecheat tucks button children with negative margins, which cancels the
+   gap between an icon and its label — zero them and keep an honest gap. */
+:is(a, button):is([primary], [secondary], [tertiary]) {
+  gap: calc(var(--unit) * 1.5);
+}
+
+:is(a, button):is([primary], [secondary], [tertiary]) > * {
+  margin-inline: 0;
+}
+
 overlens-inspector {
   display: block;
   height: 100dvh;
@@ -56,7 +66,7 @@ inspector-meta {
   background: oklch(from var(--card) l c h / 0.82);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: calc(var(--unit) * 1.5);
 }
 
 meta-detail {
@@ -79,16 +89,11 @@ inspector-controls {
   background: oklch(from var(--card) l c h / 0.82);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: calc(var(--unit) * 1.5);
 }
 
 control-group {
   display: flex;
-  transition: opacity 150ms;
-}
-
-control-group[inert] {
-  opacity: 0.35;
 }
 
 control-group button {
@@ -96,18 +101,19 @@ control-group button {
 }
 
 control-group button:first-child {
-  border-radius: var(--radius) 0 0 var(--radius);
+  border-radius: calc(var(--unit) * 1) 0 0 calc(var(--unit) * 1);
 }
 
 control-group button:last-child {
-  border-radius: 0 var(--radius) var(--radius) 0;
+  border-radius: 0 calc(var(--unit) * 1) calc(var(--unit) * 1) 0;
 }
 
 control-group button:not(:first-child) {
   margin-left: -1px;
 }
 
-inspector-controls button[active] {
+inspector-controls button[active],
+variant-jumps button[active] {
   background: var(--accent);
   color: var(--accent-foreground);
   border-color: var(--accent-foreground);
@@ -116,10 +122,6 @@ inspector-controls button[active] {
 
 inspector-controls input[type='range'] {
   width: 120px;
-}
-
-inspector-controls input[type='range'][inert] {
-  opacity: 0.35;
 }
 
 red-dot {
@@ -184,6 +186,16 @@ pane-note {
 
 pane-note[danger] {
   color: var(--destructive);
+}
+
+pane-note[stacked] {
+  flex-direction: column;
+}
+
+variant-jumps {
+  display: flex;
+  gap: calc(var(--unit) * 2);
+  --unit-size: 24px;
 }
 
 compare-single,

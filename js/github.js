@@ -151,13 +151,14 @@ export const loadVariant = (variant) => {
     if (v.status !== 'added' && !v.baseUrl) side(p, shown, 'base');
     if (v.status !== 'removed' && !v.headUrl) side(p, shown, 'head');
   }
+  if ($.view.mode === 'difference') ensureDiffs();
 };
 
 const queueDiff = (p, variant) => {
   const v = p.variants[variant];
   if (!v || v.diffUrl || v.status !== 'changed') return;
   diffChain = diffChain.then(async () => {
-    if (!$.view.difference || v.diffUrl) return;
+    if ($.view.mode !== 'difference' || v.diffUrl) return;
     const ins = $.inspector;
     const path = `${variant}/${p.name}.png`;
     try {
