@@ -153,6 +153,25 @@ red-dot {
   box-shadow: 0 0 6px var(--diff-red);
 }
 
+slides[scrollbar],
+compare-pane {
+  scrollbar-color: oklch(from var(--foreground) l c h / 0.2) oklch(from var(--foreground) l c h / 0.08);
+}
+
+:is(slides[scrollbar], compare-pane)::-webkit-scrollbar {
+  width: calc(var(--unit) * 2.5);
+}
+
+:is(slides[scrollbar], compare-pane)::-webkit-scrollbar-track {
+  background: oklch(from var(--foreground) l c h / 0.08);
+}
+
+:is(slides[scrollbar], compare-pane)::-webkit-scrollbar-thumb {
+  background: oklch(from var(--foreground) l c h / 0.2);
+  border-radius: 999px;
+  border: 2px solid var(--background);
+}
+
 slides > section {
   flex-direction: column;
   gap: calc(var(--unit) * 3);
