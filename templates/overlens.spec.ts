@@ -4,10 +4,6 @@ import { expect, test, type Page } from "@playwright/test";
 
 import overlens from "../overlens.config";
 
-test.use({
-  storageState: overlens.auth && "tests/.auth/overlens-login-cookie.json",
-});
-
 test.skip(!process.env.OVERLENS, "overlens crawl runs in CI only");
 test.describe.configure({ retries: 0 });
 

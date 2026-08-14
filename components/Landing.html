@@ -118,7 +118,9 @@
       <p>
         That's it — the next preview deploy on a PR creates
         <code>overlens/pr-{n}</code>, inspectable right here at
-        <code>overlens.korte.kim/{owner}/{repo}/pull/{n}</code>.
+        <code>overlens.korte.kim/{owner}/{repo}/pull/{n}</code>. One timing
+        note: a deploy that finishes before its PR is opened can't be matched
+        to it and is skipped — the next push after opening the PR picks it up.
       </p>
     </guide-modal>
   </component>

@@ -11,7 +11,6 @@ export type OverlensConfig = {
   targetBranch: string;
   passes: OverlensPass[];
   theme: (page: Page, theme: OverlensPass["theme"]) => Promise<unknown>;
-  auth?: (page: Page) => Promise<void>;
   blockRequests?: RegExp[];
   freezeClock?: boolean;
   shape?: (path: string) => string;

@@ -4,10 +4,6 @@ on:
   pull_request:
     types: [closed]
 
-permissions:
-  contents: write
-  pull-requests: write
-
 concurrency:
   group: overlens-${{ github.event.deployment.ref || github.event.pull_request.number }}
   cancel-in-progress: true
@@ -15,25 +11,31 @@ concurrency:
 jobs:
   crawl:
     name: Crawl & Snapshot
-    if: ${{ github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && contains(github.event.deployment_status.environment, 'Preview') }}
+    # Production deployments are how the targetBranch gets its baseline crawl.
+    if: ${{ github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && (contains(github.event.deployment_status.environment, 'Preview') || contains(github.event.deployment_status.environment, 'Production')) }}
     timeout-minutes: 30
     runs-on: ubuntu-latest
     container: mcr.microsoft.com/playwright:v1.60.0-noble
+    permissions:
+      contents: read
     outputs:
       createPR: ${{ steps.flags.outputs.createPR }}
       targetBranch: ${{ steps.flags.outputs.targetBranch }}
     steps:
-      - name: Checkout 🛎
-        uses: actions/checkout@v4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
+        with:
+          persist-credentials: false
       - run: apt-get update && apt-get install -y unzip
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
       - run: bun install
       - name: Read config flags
         id: flags
         run: |
+          TARGET=$(bun -e 'console.log((await import("./overlens.config.ts")).default.targetBranch)')
+          case "$TARGET" in ''|undefined) echo "overlens.config.ts must set targetBranch" >&2; exit 1;; esac
+          echo "targetBranch=$TARGET" >> $GITHUB_OUTPUT
           echo "createPR=$(bun -e 'console.log((((await import("./overlens.config.ts")).default.createPR ?? true) ? "true" : "false"))')" >> $GITHUB_OUTPUT
-          echo "targetBranch=$(bun -e 'console.log((await import("./overlens.config.ts")).default.targetBranch)')" >> $GITHUB_OUTPUT
-      - run: bunx playwright install --with-deps
+      - run: bunx playwright install
       - run: OVERLENS=1 bunx playwright test overlens.spec.ts
         env:
           PLAYWRIGHT_BASE_URL: ${{ github.event.deployment_status.target_url }}
@@ -48,19 +50,24 @@ jobs:
     needs: crawl
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     env:
       GH_TOKEN: ${{ github.token }}
       TARGET_BRANCH: ${{ needs.crawl.outputs.targetBranch }}
     steps:
-      - name: Checkout 🛎
-        uses: actions/checkout@v4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
         with:
           fetch-depth: 0
       - run: sudo apt-get update && sudo apt-get install -y imagemagick jq
       - name: Resolve slug
         run: |
-          BRANCH=$(git name-rev --name-only $GITHUB_SHA)
+          # A deploy can land after a newer push — name-rev then answers
+          # "branch~N"; the branch is the part before the suffix.
+          BRANCH=$(git name-rev --name-only --exclude 'tags/*' $GITHUB_SHA)
           BRANCH="${BRANCH#remotes/origin/}"
+          BRANCH="${BRANCH%%[~^]*}"
           echo "BRANCH=$BRANCH" >> $GITHUB_ENV
           if [ "$BRANCH" = "$TARGET_BRANCH" ]; then
             echo "SLUG=dev" >> $GITHUB_ENV
@@ -81,8 +88,13 @@ jobs:
         run: |
           REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           echo "REMOTE=$REMOTE" >> $GITHUB_ENV
-          git clone -q --depth 1 --branch overlens/dev "$REMOTE" /tmp/publish 2>/dev/null \
-            || git init -q -b "overlens/$SLUG" /tmp/publish
+          # Probe first: a transient clone failure must fail the run, never
+          # masquerade as "no baseline yet" and force-push a fresh history.
+          if git ls-remote "$REMOTE" refs/heads/overlens/dev | grep -q .; then
+            git clone -q --depth 1 --branch overlens/dev "$REMOTE" /tmp/publish
+          else
+            git init -q -b "overlens/$SLUG" /tmp/publish
+          fi
           cd /tmp/publish
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -157,7 +169,8 @@ jobs:
           PCT=$(awk -v c="$CHANGED" -v t="$TOTAL" 'BEGIN{s=sprintf("%.1f", c*100/t); sub(/\.0$/, "", s); printf "%s%%", s}')
           LENS="https://overlens.korte.kim/${GITHUB_REPOSITORY}/pull/${PR}"
           VPR=$(gh pr list --head "overlens/$SLUG" --state open --json url -q '.[0].url')
-          if [ -z "$VPR" ] && [ "$CHANGED" -gt 0 ] && [ -n "$BRANCH_EXISTS" ] && [ "$CREATE_PR" != "false" ]; then
+          if [ -z "$VPR" ] && [ "$CHANGED" -gt 0 ] && [ -n "$BRANCH_EXISTS" ] && [ "$CREATE_PR" != "false" ] \
+            && git ls-remote --exit-code "$REMOTE" refs/heads/overlens/dev > /dev/null 2>&1; then
             VPR=$(gh pr create --draft --base overlens/dev --head "overlens/$SLUG" \
               --title "🎭 Overlens" --body "Overlens is preparing the report…")
           fi
@@ -257,6 +270,8 @@ jobs:
     if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
     timeout-minutes: 5
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
