@@ -6,15 +6,18 @@
     <title>Overlens</title>
     <link rel="icon" href="/assets/favicon.svg" />
     <link rel="stylesheet" href="/node_modules/@ape-egg/vibe/vibe.css" />
+    <link rel="stylesheet" href="/node_modules/@ape-egg/codie/codie.css" />
     <link rel="stylesheet" href="/css/site.css" />
 
     <script type="module">
       import vibe from "/node_modules/@ape-egg/vibe/index.js";
       import globalState from "/js/globalState.js";
       import { handleCallback } from "/js/github.js";
+      import guide from "/js/guide.js";
 
       window.$ = vibe({ ...globalState });
       handleCallback();
+      $.on("ready", guide);
     </script>
   </head>
 

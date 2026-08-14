@@ -8,6 +8,7 @@
     "compile": "bun node_modules/@ape-egg/vibe-compiler/bin/vibe-compile.js"
   },
   "dependencies": {
+    "@ape-egg/codie": "^0.1.3",
     "@ape-egg/vibe": "^3.0.4"
   },
   "devDependencies": {

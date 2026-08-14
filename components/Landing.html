@@ -28,18 +28,85 @@
       <img src="/assets/inspector.png" alt="The Overlens inspector comparing two screenshots in Split mode" />
     </landing-shot>
 
-    <landing-how>
-      A repo's Overlens workflow crawls every preview deploy and pushes
-      screenshots to <code>overlens/dev</code> and <code>overlens/pr-{n}</code>
-      branches. This site reads those branches — tip against tip — and renders
-      what a merge would mean today: Split, Onion, 2-up and a pixel-level
-      Difference, at both viewports and in both themes.
-    </landing-how>
-
     <crow g-3>
-      <a href="https://github.com/kkortes/overlens" primary target="_blank" rel="noopener">
-        <icon logo-github></icon> GitHub
-      </a>
+      <button secondary onclick="$.modal = 'how'">How does it work?</button>
+      <button secondary onclick="$.modal = 'install'">Installation</button>
     </crow>
   </landing-hero>
+
+  <component src="/components/Modal.html" when="@[modal === 'how']">
+    <guide-modal>
+      <guide-head>
+        <h2>How does it work?</h2>
+        <button tertiary onclick="$.modal = ''"><icon cross></icon></button>
+      </guide-head>
+      <p>
+        A repo's Overlens workflow crawls every preview deploy and pushes
+        screenshots to <code>overlens/dev</code> and <code>overlens/pr-{n}</code>
+        branches. This site reads those branches — tip against tip — and renders
+        what a merge would mean today: Split, Onion, 2-up and a pixel-level
+        Difference, at both viewports and in both themes.
+      </p>
+      <p>
+        The baseline is whichever branch the repo's config names in
+        <code>targetBranch</code> — its snapshots always live in
+        <code>overlens/dev</code>, the branch this inspector reads.
+      </p>
+    </guide-modal>
+  </component>
+
+  <component src="/components/Modal.html" when="@[modal === 'install']">
+    <guide-modal>
+      <guide-head>
+        <h2>Installation</h2>
+        <button tertiary onclick="$.modal = ''"><icon cross></icon></button>
+      </guide-head>
+      <p>
+        Overlens rides on your preview deploys: every successful GitHub
+        "Preview" deployment (Vercel emits these out of the box) triggers a
+        crawl that screenshots every reachable page and pushes the snapshot
+        branches this site reads. The repo needs Bun and Playwright; three
+        files make the integration:
+      </p>
+
+      <guide-step>
+        <h3><step-no>1</step-no> <code>overlens.config.ts</code> — repo root</h3>
+        <p>
+          The only file that's yours to shape: the crawl entry point, the
+          viewport/theme passes and how your app switches theme.
+          <code>targetBranch</code> decides which branch Overlens compares PRs
+          against — whatever it's called, its snapshots are pushed to
+          <code>overlens/dev</code>.
+        </p>
+        <template codie highlight-js dark data-src="overlens.config.ts"></template>
+      </guide-step>
+
+      <guide-step>
+        <h3><step-no>2</step-no> <code>tests/overlens.spec.ts</code></h3>
+        <p>
+          The generic crawl engine: follows every root-relative link, dedupes
+          screenshots by path shape, freezes the clock and masks volatile
+          content. It only reads the config, so tuning the crawl never means
+          editing this file.
+        </p>
+        <template codie highlight-js dark data-src="overlens.spec.ts"></template>
+      </guide-step>
+
+      <guide-step>
+        <h3><step-no>3</step-no> <code>.github/workflows/overlens.yml</code></h3>
+        <p>
+          Runs the crawl when a preview deploy succeeds, diffs the output
+          against the baseline, pushes the snapshot branches and maintains a
+          summary in the source PR's description.
+        </p>
+        <template codie highlight-js dark data-src="overlens.yml"></template>
+      </guide-step>
+
+      <p>
+        That's it — the next preview deploy on a PR creates
+        <code>overlens/pr-{n}</code>, inspectable right here at
+        <code>overlens.korte.kim/{owner}/{repo}/pull/{n}</code>.
+      </p>
+    </guide-modal>
+  </component>
 </landing-page>

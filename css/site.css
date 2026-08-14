@@ -394,10 +394,64 @@ landing-shot img {
   max-width: 100%;
 }
 
-landing-how {
-  display: block;
-  max-width: 620px;
+guide-modal {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--unit) * 4);
+  max-width: 760px;
+  padding: calc(var(--unit) * 6);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--unit) * 1.5);
+}
+
+guide-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--unit) * 3);
+}
+
+guide-head h2,
+guide-step h3 {
+  margin: 0;
+}
+
+guide-modal p {
+  margin: 0;
   font-size: 14px;
   line-height: 1.7;
   color: var(--muted-foreground);
+}
+
+guide-step {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--unit) * 2);
+}
+
+guide-step h3 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--unit) * 2);
+  font-size: 15px;
+}
+
+step-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 100%;
+  background: var(--accent-lens);
+  color: oklch(0.2 0 0);
+  font-size: 13px;
+}
+
+guide-modal [codie] {
+  max-height: 360px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--unit) * 1);
 }

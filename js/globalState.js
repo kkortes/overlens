@@ -2,6 +2,7 @@ import config from '/js/config.js';
 import { loadVariant, ensureDiffs, signIn, signOut } from '/js/github.js';
 
 export default {
+  modal: '',
   view: {
     viewport: 'desktop',
     theme: 'light',
