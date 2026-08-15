@@ -73,13 +73,20 @@
         <button tertiary onclick="$.modal = ''"><icon cross></icon></button>
       </guide-head>
       <p>
-        Overlens rides on your preview deploys: every successful GitHub
-        "Preview" deployment (Vercel emits these out of the box) triggers a
+        Overlens rides on your deploys: every successful GitHub "Preview" or
+        "Production" deployment (Vercel emits these out of the box) triggers a
         crawl that screenshots every reachable page and pushes the snapshot
-        branches this site reads. The repo needs Bun and
+        branches this site reads. The crawler is an ordinary visitor, so the
+        deploy has to be reachable without a login — Vercel's deployment
+        protection turns every page into the same auth wall.
+      </p>
+      <p>
+        The repo needs Bun and
         <a href="https://playwright.dev" target="_blank" rel="noopener" primary>Playwright</a>,
-        which we have to thank for making all of this possible; three files
-        make the integration:
+        which we have to thank for making all of this possible — add
+        <code>@playwright/test</code> to your dev dependencies and the workflow
+        installs browsers to match whatever version you pin. Three files make
+        the integration:
       </p>
 
       <guide-step>
@@ -100,9 +107,10 @@
         <h3><step-no>2</step-no> <code>tests/overlens.spec.ts</code></h3>
         <p>
           The generic crawl engine: follows every root-relative link, dedupes
-          screenshots by path shape, freezes the clock and masks volatile
-          content. It only reads the config, so tuning the crawl never means
-          editing this file.
+          screenshots by path shape, waits for each page to stop changing
+          before it shoots, freezes the clock and masks volatile content. It
+          only reads the config, so tuning the crawl never means editing this
+          file.
         </p>
         <template codie highlight-js dark data-src="overlens.spec.ts"></template>
       </guide-step>
@@ -123,6 +131,18 @@
         <code>overlens.korte.kim/{owner}/{repo}/pull/{n}</code>. One timing
         note: a deploy that finishes before its PR is opened can't be matched
         to it and is skipped — the next push after opening the PR picks it up.
+      </p>
+      <p>
+        Land it on <code>targetBranch</code> first. Until that branch has
+        deployed once there is no <code>overlens/dev</code> to compare against,
+        so a PR opened before then honestly reports every page as new — that
+        first run is the baseline being born, not a regression.
+      </p>
+      <p>
+        On a private repo, sign in with GitHub up top and install the Overlens
+        app on it. The inspector holds nothing of yours; it reads your snapshot
+        branches with your own token, and without one a private repo is
+        indistinguishable from a repo that has never run the workflow.
       </p>
     </guide-modal>
   </component>
