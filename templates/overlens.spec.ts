@@ -61,21 +61,26 @@ const normalize = (page: Page) =>
       });
   }, tokens);
 
-// A page is ready to screenshot when it has stopped changing — not when the
-// network went idle at goto time. State arriving over a websocket mounts
+// A page is ready to screenshot when it has stopped changing, not when the
+// network went idle at goto time: state arriving over a websocket mounts
 // content long after networkidle, and those mounts fire fresh component
-// fetches goto never saw (the empty-armory race). Quiescence is observed
-// directly: no in-flight HTTP and no DOM mutation for 400ms, capped at 10s —
-// a page that never goes quiet (continuous animation) is shot as-is, masks
-// covering its known tickers.
-const inflightOf = new WeakMap<Page, Set<unknown>>();
+// fetches goto never saw. Quiescence is observed directly — no network event
+// and no DOM mutation for 400ms, capped at 10s so a page that never goes quiet
+// is shot as-is, masks covering its known tickers.
+//
+// A timestamp, not a set of pending requests: some requests emit a request
+// event and then neither requestfinished nor requestfailed, and one such leak
+// poisons a set permanently — the page would never look idle again. An event
+// that never arrives simply stops bumping the clock.
+const lastRequestOf = new WeakMap<Page, { at: number }>();
 
 const trackRequests = (page: Page) => {
-  const inflight = new Set<unknown>();
-  inflightOf.set(page, inflight);
-  page.on("request", (r) => inflight.add(r));
-  page.on("requestfinished", (r) => inflight.delete(r));
-  page.on("requestfailed", (r) => inflight.delete(r));
+  const seen = { at: Date.now() };
+  lastRequestOf.set(page, seen);
+  const bump = () => (seen.at = Date.now());
+  page.on("request", bump);
+  page.on("requestfinished", bump);
+  page.on("requestfailed", bump);
 };
 
 const observeMutations = (page: Page) =>
@@ -86,16 +91,20 @@ const observeMutations = (page: Page) =>
   );`);
 
 const settled = async (page: Page) => {
-  const inflight = inflightOf.get(page)!;
+  const seen = lastRequestOf.get(page)!;
   const deadline = Date.now() + 10_000;
   while (Date.now() < deadline) {
-    const quiet = await page.evaluate(
-      () =>
-        performance.now() -
-          ((window as { __overlensLastMutation?: number }).__overlensLastMutation ?? 0) >
-        400,
-    );
-    if (quiet && inflight.size === 0) return;
+    if (
+      Date.now() - seen.at > 400 &&
+      (await page.evaluate(
+        () =>
+          performance.now() -
+            ((window as { __overlensLastMutation?: number })
+              .__overlensLastMutation ?? 0) >
+          400,
+      ))
+    )
+      return;
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
 };
@@ -145,7 +154,6 @@ test("overlens crawl", async ({ context }) => {
   const first = new URL(overlens.firstPageToVisit);
   const firstPath = first.pathname.replace(/\/$/, "") || "/";
   const seen = new Set<string>();
-  const shapes = new Set<string>();
   const queue = [firstPath];
   const pages: string[] = [];
 
@@ -154,6 +162,11 @@ test("overlens crawl", async ({ context }) => {
     if (seen.has(path)) continue;
     seen.add(path);
     const pathShape = shape(path);
+    // `shape` declares these paths to be the same page, so a second instance
+    // has nothing to add: same screenshot, same links. Collapsing them is the
+    // whole point of shaping. A shape only counts as captured once a visit
+    // succeeds, so a page that fails still lets its siblings stand in.
+    if (pages.includes(pathShape)) continue;
     const started = Date.now();
 
     try {
@@ -167,32 +180,29 @@ test("overlens crawl", async ({ context }) => {
         );
         await overlens.ready?.(page);
 
-        if (!shapes.has(pathShape)) {
-          await page.evaluate(() => document.fonts.ready);
-          await page.addStyleTag({
-            content:
-              "*, *::before, *::after { transition: none !important; animation: none !important; caret-color: transparent !important; }",
-          });
+        await page.evaluate(() => document.fonts.ready);
+        await page.addStyleTag({
+          content:
+            "*, *::before, *::after { transition: none !important; animation: none !important; caret-color: transparent !important; }",
+        });
 
-          for (const { name, width, theme } of overlens.passes) {
-            await page.setViewportSize({ width, height: 720 });
-            await overlens.theme(page, theme);
-            await normalize(page);
-            await settled(page);
-            await page.evaluate(() =>
-              Promise.all(
-                [...document.images].map((img) => img.decode().catch(() => {})),
-              ),
-            );
-            await page.screenshot({
-              path: `overlens-output/${name}/${fileBase(pathShape)}.png`,
-              fullPage: true,
-              mask: mask.map((selector) => page.locator(selector)),
-            });
-          }
-          shapes.add(pathShape);
-          pages.push(pathShape);
+        for (const { name, width, theme } of overlens.passes) {
+          await page.setViewportSize({ width, height: 720 });
+          await overlens.theme(page, theme);
+          await normalize(page);
+          await settled(page);
+          await page.evaluate(() =>
+            Promise.all(
+              [...document.images].map((img) => img.decode().catch(() => {})),
+            ),
+          );
+          await page.screenshot({
+            path: `overlens-output/${name}/${fileBase(pathShape)}.png`,
+            fullPage: true,
+            mask: mask.map((selector) => page.locator(selector)),
+          });
         }
+        pages.push(pathShape);
 
         const hrefs = await page
           .locator("a[href^='/']:not([href^='//'])")
