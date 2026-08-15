@@ -15,6 +15,11 @@ jobs:
     if: ${{ github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && github.event.deployment_status.target_url != '' && (contains(github.event.deployment_status.environment, 'Preview') || contains(github.event.deployment_status.environment, 'Production')) }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    # Pinned so text rasterises identically across crawls: freetype and
+    # fontconfig differ between runner images, which shifts every glyph a
+    # subpixel and diffs every page. Keep the tag in lockstep with your
+    # @playwright/test version — the image ships that version's browsers.
+    container: mcr.microsoft.com/playwright:v1.62.1-noble
     permissions:
       contents: read
     outputs:
@@ -24,6 +29,7 @@ jobs:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
         with:
           persist-credentials: false
+      - run: apt-get update && apt-get install -y unzip
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
       - run: bun install
       - name: Read config flags
@@ -38,10 +44,9 @@ jobs:
           case "$TARGET" in ''|undefined) echo "overlens.config must set targetBranch" >&2; exit 1;; esac
           echo "targetBranch=$TARGET" >> $GITHUB_OUTPUT
           echo "createPR=$(bun -e 'console.log((((await import("./overlens.config")).default.createPR ?? true) ? "true" : "false"))')" >> $GITHUB_OUTPUT
-      # No pinned browser container: --with-deps installs the browsers and OS
-      # deps matching the project's own @playwright/test version. The pattern
-      # matches overlens.spec.ts or .js.
-      - run: bunx playwright install --with-deps
+      # The image already ships the browsers and OS deps. The pattern matches
+      # overlens.spec.ts or .js.
+      - run: bunx playwright install
       - run: OVERLENS=1 bunx playwright test overlens.spec
         env:
           PLAYWRIGHT_BASE_URL: ${{ github.event.deployment_status.target_url }}

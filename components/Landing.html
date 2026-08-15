@@ -84,9 +84,12 @@
         The repo needs Bun and
         <a href="https://playwright.dev" target="_blank" rel="noopener" primary>Playwright</a>,
         which we have to thank for making all of this possible — add
-        <code>@playwright/test</code> to your dev dependencies and the workflow
-        installs browsers to match whatever version you pin. Three files make
-        the integration:
+        <code>@playwright/test</code> to your dev dependencies and keep the
+        workflow's container tag on that same version. The crawl runs inside
+        that image so every snapshot rasterises text on one font stack —
+        render a baseline on one runner image and a PR on another and every
+        glyph shifts a subpixel, which reads as every page having changed.
+        Three files make the integration:
       </p>
 
       <guide-step>
