@@ -61,18 +61,44 @@ const normalize = (page: Page) =>
       });
   }, tokens);
 
-const settled = (page: Page) =>
-  page.waitForFunction(
-    () =>
-      new Promise<boolean>((resolve) => {
-        const height = document.documentElement.scrollHeight;
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() =>
-            resolve(document.documentElement.scrollHeight === height),
-          ),
-        );
-      }),
-  );
+// A page is ready to screenshot when it has stopped changing — not when the
+// network went idle at goto time. State arriving over a websocket mounts
+// content long after networkidle, and those mounts fire fresh component
+// fetches goto never saw (the empty-armory race). Quiescence is observed
+// directly: no in-flight HTTP and no DOM mutation for 400ms, capped at 10s —
+// a page that never goes quiet (continuous animation) is shot as-is, masks
+// covering its known tickers.
+const inflightOf = new WeakMap<Page, Set<unknown>>();
+
+const trackRequests = (page: Page) => {
+  const inflight = new Set<unknown>();
+  inflightOf.set(page, inflight);
+  page.on("request", (r) => inflight.add(r));
+  page.on("requestfinished", (r) => inflight.delete(r));
+  page.on("requestfailed", (r) => inflight.delete(r));
+};
+
+const observeMutations = (page: Page) =>
+  page.addInitScript(`
+  new MutationObserver(() => { window.__overlensLastMutation = performance.now(); }).observe(
+    document,
+    { subtree: true, childList: true, attributes: true, characterData: true },
+  );`);
+
+const settled = async (page: Page) => {
+  const inflight = inflightOf.get(page)!;
+  const deadline = Date.now() + 10_000;
+  while (Date.now() < deadline) {
+    const quiet = await page.evaluate(
+      () =>
+        performance.now() -
+          ((window as { __overlensLastMutation?: number }).__overlensLastMutation ?? 0) >
+        400,
+    );
+    if (quiet && inflight.size === 0) return;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+};
 
 // A page can wedge its own main thread (an app bug: an infinite render/
 // navigate loop). Playwright's evaluate has no timeout, so without a deadline
@@ -102,6 +128,8 @@ test("overlens crawl", async ({ context }) => {
   test.setTimeout((overlens.timeoutMinutes ?? 15) * 60 * 1000);
 
   const preparePage = async (target: Page) => {
+    trackRequests(target);
+    await observeMutations(target);
     await target.emulateMedia({ reducedMotion: "reduce" });
     if (overlens.freezeClock ?? true)
       await clock(target, Date.UTC(2026, 7, 11, 12));
