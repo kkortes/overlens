@@ -202,12 +202,11 @@ test("overlens crawl", async ({ context }) => {
             mask: mask.map((selector) => page.locator(selector)),
           });
         }
-        pages.push(pathShape);
-
         const hrefs = await page
           .locator("a[href^='/']:not([href^='//'])")
           .evaluateAll((as) => as.map((a) => a.getAttribute("href")!));
         queue.push(...hrefs.map((href) => href.split(/[?#]/)[0]));
+        pages.push(pathShape);
       });
       console.info(
         `${pathShape} ${Date.now() - started}ms (visited ${seen.size}, queued ${queue.length})`,
