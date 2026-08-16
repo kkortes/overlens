@@ -264,11 +264,17 @@ export const handleCallback = async () => {
   }
 };
 
-// Both sides of a comparison render at one shared scale: the pane maps its
+// Both sides of a comparison render at one shared scale: the area maps its
 // width to the wider image, never upscaling past 1:1 (100cqw of the nearest
 // container). GitHub's swipe scales sides independently — this is the fix.
-window.imgWidth = (cur, which) => {
-  const max = Math.max(cur.baseW, cur.headW, 1);
-  const nat = which === 'diff' ? max : cur[`${which}W`];
-  return `calc(min(100cqw, ${max}px) * ${(nat / max).toFixed(6)})`;
+// Fit mode caps the union box by the area's height too, so a whole page is
+// visible without scrolling; 2-up halves the width budget and pays the
+// caption row (--unit * 6) out of the height budget.
+window.imgWidth = (cur, which, fit, cols = 1) => {
+  const w = Math.max(cur.baseW, cur.headW, 1);
+  const h = Math.max(cur.baseH, cur.headH, 1);
+  const nat = which === 'diff' ? w : cur[`${which}W`];
+  const caps = [cols === 2 ? '(100cqw - var(--unit) * 3) / 2' : '100cqw', `${w}px`];
+  if (fit) caps.push(`${cols === 2 ? '(100cqh - var(--unit) * 6)' : '100cqh'} * ${(w / h).toFixed(6)}`);
+  return `calc(min(${caps.join(', ')}) * ${(nat / w).toFixed(6)})`;
 };

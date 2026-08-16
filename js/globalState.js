@@ -8,8 +8,8 @@ export default {
     theme: 'light',
     variant: 'desktop-light',
     mode: 'difference',
-    onion: 50,
-    split: 50,
+    blend: 50,
+    fit: localStorage.getItem('overlens-fit') !== 'scroll',
   },
   inspector: {
     phase: 'idle',
@@ -56,12 +56,16 @@ export default {
     this.view.mode = mode;
     if (mode === 'difference') ensureDiffs();
   },
+  toggleFit() {
+    this.view.fit = !this.view.fit;
+    localStorage.setItem('overlens-fit', this.view.fit ? 'fit' : 'scroll');
+  },
   dragSplit(e) {
     e.preventDefault();
     const track = e.currentTarget.parentElement;
     const move = (ev) => {
       const r = track.getBoundingClientRect();
-      $.view.split = Math.round(Math.min(100, Math.max(0, ((ev.clientX - r.left) / r.width) * 100)) * 10) / 10;
+      $.view.blend = Math.round(Math.min(100, Math.max(0, ((ev.clientX - r.left) / r.width) * 100)) * 10) / 10;
     };
     const up = () => {
       removeEventListener('pointermove', move);

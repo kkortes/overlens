@@ -9,7 +9,6 @@
 
 :root {
   --accent-lens: oklch(0.78 0.14 75);
-  --diff-red: oklch(0.62 0.24 27);
   --font-display: 'Space Grotesk', var(--font-sans, system-ui, sans-serif);
 }
 
@@ -71,11 +70,7 @@ inspector-state p[fine] {
   opacity: 0.7;
 }
 
-inspector-meta,
-inspector-controls,
-top-right:has(inspector-controls) auth-bar {
-  display: flex;
-  align-items: center;
+inspector-meta {
   background: oklch(from var(--card) l c h / 0.82);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border);
@@ -85,16 +80,24 @@ top-right:has(inspector-controls) auth-bar {
 top-left {
   position: fixed;
   top: calc(var(--unit) * 3);
-  left: calc(var(--unit) * 3);
+  left: calc(var(--unit) * 6);
   z-index: 10;
   display: flex;
   align-items: center;
+  min-height: calc(var(--unit) * 11);
   gap: calc(var(--unit) * 3);
 }
 
 inspector-meta {
+  display: flex;
+  align-items: center;
   gap: calc(var(--unit) * 3);
-  padding: calc(var(--unit) * 1.5) calc(var(--unit) * 3);
+  padding: calc(var(--unit) * 1) calc(var(--unit) * 3);
+}
+
+inspector-meta a {
+  padding-inline: calc(var(--unit) * 2);
+  margin-left: calc(var(--unit) * -2);
 }
 
 meta-detail {
@@ -106,26 +109,24 @@ meta-detail {
 top-right {
   position: fixed;
   top: calc(var(--unit) * 3);
-  right: calc(var(--unit) * 3);
+  right: calc(var(--unit) * 6);
   z-index: 10;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  min-height: calc(var(--unit) * 11);
   gap: calc(var(--unit) * 2);
 }
 
 inspector-controls {
+  display: flex;
+  align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: calc(var(--unit) * 2);
-  padding: calc(var(--unit) * 1.5) calc(var(--unit) * 2);
 }
 
 auth-bar {
   display: flex;
-}
-
-top-right:has(inspector-controls) auth-bar {
-  padding: calc(var(--unit) * 1.5);
 }
 
 auth-bar:not(:has(button)) {
@@ -157,18 +158,6 @@ inspector-controls button[active] {
   color: var(--accent-foreground);
   border-color: var(--accent-foreground);
   z-index: 1;
-}
-
-inspector-controls input[type='range'] {
-  width: 120px;
-}
-
-red-dot {
-  width: 10px;
-  height: 10px;
-  background: var(--diff-red);
-  border-radius: 100%;
-  box-shadow: 0 0 6px var(--diff-red);
 }
 
 body {
@@ -216,18 +205,19 @@ diff-percent {
   font-family: var(--font-mono, monospace);
 }
 
-slide-header badge {
+slide-tools {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--unit) * 3);
   margin-left: auto;
 }
 
 compare-pane {
   flex: 1;
   min-height: 0;
-  display: block;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-gutter: stable;
-  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -235,9 +225,26 @@ compare-pane {
 }
 
 compare-pane:has(pane-note[stacked]) {
-  display: flex;
   align-items: center;
   justify-content: center;
+}
+
+compare-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: safe center;
+  justify-content: safe center;
+}
+
+compare-area[fit] {
+  container-type: size;
+}
+
+compare-area:not([fit]) {
+  overflow: auto;
+  scrollbar-gutter: stable;
+  container-type: inline-size;
 }
 
 pane-note {
@@ -266,12 +273,15 @@ variant-jumps {
   --unit-size: 24px;
 }
 
-compare-single,
 compare-stack {
-  display: block;
   position: relative;
   width: fit-content;
-  margin: 0 auto;
+  display: grid;
+  place-items: start;
+}
+
+compare-stack > img {
+  grid-area: 1 / 1;
 }
 
 compare-pane img {
@@ -279,14 +289,22 @@ compare-pane img {
   background: white;
 }
 
-compare-stack img[head] {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
 compare-stack img[clipped] {
   clip-path: inset(0 calc(100% - var(--split)) 0 0);
+}
+
+compare-slider {
+  display: block;
+  padding: calc(var(--unit) * 3) 0 0;
+}
+
+compare-slider input[type='range'] {
+  width: 100%;
+  min-width: 0;
+}
+
+compare-slider input[type='range']::-webkit-slider-thumb {
+  width: calc(var(--unit) * 8.5);
 }
 
 split-handle {
@@ -308,41 +326,49 @@ split-handle::before {
 }
 
 split-handle::after {
-  content: '◂ ▸';
+  content: '◂▸';
   position: sticky;
   top: 50%;
-  display: block;
-  width: max-content;
-  margin-left: -19px;
-  padding: 2px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--unit) * 8);
+  aspect-ratio: 1;
+  margin-left: calc(1px - var(--unit) * 4);
   font-size: 11px;
   color: oklch(0.2 0 0);
   background: var(--accent-lens);
-  border-radius: 999px;
+  border-radius: 100%;
 }
 
 two-up {
   display: flex;
   align-items: flex-start;
   gap: calc(var(--unit) * 3);
+  width: 100%;
 }
 
 two-up figure {
   flex: 1;
   min-width: 0;
   margin: 0;
-  container-type: inline-size;
 }
 
-two-up img {
-  margin: 0 auto;
+two-up figure:first-child img {
+  margin-inline: auto 0;
+}
+
+two-up figure:last-child img {
+  margin-inline: 0 auto;
 }
 
 two-up figcaption {
+  height: calc(var(--unit) * 4);
+  line-height: calc(var(--unit) * 4);
+  padding-bottom: calc(var(--unit) * 2);
   font-size: 12px;
   font-family: var(--font-mono, monospace);
   color: var(--muted-foreground);
-  padding-bottom: calc(var(--unit) * 2);
   text-align: center;
 }
 
@@ -543,4 +569,54 @@ guide-modal [codie] {
   border: 1px solid var(--border);
   border-radius: calc(var(--unit) * 1);
   font-size: 12px;
+}
+
+@media (width <= 768px) {
+  overlens-inspector {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: min-content min-content min-content 1fr;
+    gap: calc(var(--unit) * 2);
+    padding: calc(var(--unit) * 2) calc(var(--unit) * 2) 0;
+    box-sizing: border-box;
+  }
+
+  overlens-inspector top-left,
+  overlens-inspector top-right,
+  overlens-inspector top-right > component {
+    display: contents;
+  }
+
+  overlens-inspector [logo-text] {
+    grid-area: 1 / 1;
+    align-self: center;
+  }
+
+  overlens-inspector auth-bar {
+    grid-area: 1 / 2;
+  }
+
+  inspector-meta {
+    grid-area: 2 / 1 / 3 / 3;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(var(--unit) * 1);
+  }
+
+  inspector-controls {
+    grid-area: 3 / 1 / 4 / 3;
+    justify-content: flex-start;
+  }
+
+  inspector-state,
+  overlens-inspector carousel {
+    grid-area: 4 / 1 / 5 / 3;
+    height: auto;
+    min-height: 0;
+  }
+
+  overlens-inspector slides > section {
+    height: 100%;
+    padding: 0 0 calc(var(--unit) * 2);
+  }
 }

@@ -34,13 +34,34 @@ GitHub OAuth code, everything else runs in the browser.
 - **[components/Inspector.html](components/Inspector.html)** — stylecheat
   fullpage vertical carousel, one slide per page. One mode group: Difference
   (default), Split (clip-path + drag handle, PR left / base right), Onion
-  (opacity slider), 2-up (shared-scale columns). Viewport/theme toggles pick
+  (opacity), 2-up (shared-scale columns). Every mode but 2-up shares one
+  slider, in a bar stuck to the bottom of the card: `view.blend` runs 0 =
+  base to 100 = PR, starts at 50 and survives mode switches. Split's drag
+  handle writes the same value, so either one moves both. Difference layers
+  the diff PNG over whichever design the slider leans to — base below 50, PR
+  above — at an opacity peaking at 50 and reaching 0 at both ends, so the red
+  thins and colour returns as you slide toward either side.
+  Viewport/theme toggles pick
   the `<viewport>-<theme>/` variant in place; a slide whose page has no diff
   in the current variant renders no comparison — just a centered "Visual
   regression in" note with device buttons that jump there.
   Both sides always render at the
   same scale, top-aligned, never upscaled past 1:1 — height drift below a
-  reflow point is honest by design.
+  reflow point is honest by design. The slide header's toggle (left of the
+  status badge, `localStorage.overlens-fit`, fit by default) switches
+  `compare-area` between fit and scroll: fit is `container-type: size`, so
+  [imgWidth](js/github.js) can cap the shared scale by the area's height as
+  well as its width and the whole page lands on screen; scroll is
+  `inline-size` + `overflow: auto` and renders at 1:1. Either way the
+  comparison centres in the area (`safe center` — an overflowing page still
+  starts at the top). 2-up splits the width budget in two, pays the caption
+  row out of the height budget, and hugs the gutter: base right-aligned, PR
+  left-aligned. At ≤768px the two floating bars unfix:
+  `overlens-inspector` becomes a grid and `top-left`/`top-right` go
+  `display: contents`, so their children place themselves — logo and Sign in
+  share row 1, repo meta and the controls get a row each, the carousel takes
+  the rest. Those rules are scoped to `overlens-inspector`; the landing
+  reuses the same element names with its own fixed header.
 - **css/stylecheat.css** — vendored hybrid build (`<body stylecheat dark>`).
 
 ## Data contract
@@ -64,6 +85,9 @@ inspector warns with a `base drift` badge when `baseSha` no longer matches the
 `kkortes/overlens-fixture` (public) holds synthetic branches covering every
 state: pr-1 (changes incl. reflow + variant-specific), pr-2 (clean),
 pr-3 (no report). Regenerate with the scripts noted in that repo's history.
+It also carries PRs #1–#3, opened from those branches onto `overlens/dev`, so
+the public demo's GitHub link resolves instead of bouncing to `/issues/n` —
+keep branch names and PR numbers in step if you add cases.
 
 ## Deploy
 

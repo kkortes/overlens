@@ -23,14 +23,11 @@
     <!-- if inspector.phase === 'ready' -->
     <inspector-controls>
       <control-group>
-        <button secondary active="@[view.mode === 'difference']" onclick="$.setMode('difference')" title="Pixel-level difference of the current pair"><red-dot></red-dot> Difference</button>
+        <button secondary active="@[view.mode === 'difference']" onclick="$.setMode('difference')" title="Pixel-level difference of the current pair">Diff</button>
         <button secondary active="@[view.mode === 'split']" onclick="$.setMode('split')">Split</button>
         <button secondary active="@[view.mode === 'onion']" onclick="$.setMode('onion')">Onion</button>
         <button secondary active="@[view.mode === 'twoup']" onclick="$.setMode('twoup')">2-up</button>
       </control-group>
-      <!-- if view.mode === 'onion' -->
-      <input type="range" min="0" max="100" value="@[view.onion]" oninput="$.view.onion = +this.value" title="Blend base and PR" />
-      <!-- /if -->
       <control-group>
         <button secondary active="@[view.viewport === 'desktop']" onclick="$.setViewport('desktop')" title="Desktop viewport"><icon desktop></icon></button>
         <button secondary active="@[view.viewport === 'mobile']" onclick="$.setViewport('mobile')" title="Smartphone viewport"><icon smartphone></icon></button>
@@ -134,11 +131,14 @@
           <h2>@[p.pretty]</h2>
           <!-- if p.cur -->
           <!-- if p.cur.diffPercent -->
-          <diff-percent>@[p.cur.diffPercent]% of compared area</diff-percent>
+          <diff-percent>@[p.cur.diffPercent]% visual regression</diff-percent>
           <!-- /if -->
-          <!-- if p.cur.status === 'added' --><badge bg-green text-green>Added</badge><!-- /if -->
-          <!-- if p.cur.status === 'changed' --><badge bg-orange text-orange>Changed</badge><!-- /if -->
-          <!-- if p.cur.status === 'removed' --><badge bg-red text-red>Removed</badge><!-- /if -->
+          <slide-tools>
+            <button secondary active="@[view.fit]" onclick="$.toggleFit()" title="@[view.fit ? 'Whole page in view — click to inspect at full size' : 'Full size, scrollable — click to fit the whole page']"><icon layout></icon></button>
+            <!-- if p.cur.status === 'added' --><badge bg-green text-green>Added</badge><!-- /if -->
+            <!-- if p.cur.status === 'changed' --><badge bg-orange text-orange>Changed</badge><!-- /if -->
+            <!-- if p.cur.status === 'removed' --><badge bg-red text-red>Removed</badge><!-- /if -->
+          </slide-tools>
           <!-- /if -->
         </slide-header>
 
@@ -165,64 +165,83 @@
           <!-- if p.cur.status === 'added' -->
           <pane-note>New page — nothing to compare against. This is the PR's version.</pane-note>
           <!-- if p.cur.headUrl -->
-          <compare-single>
-            <img src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head')]" alt="PR screenshot of @[p.pretty]" />
-          </compare-single>
+          <compare-area fit="@[view.fit]">
+            <img src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head', view.fit)]" alt="PR screenshot of @[p.pretty]" />
+          </compare-area>
           <!-- /if -->
           <!-- /if -->
 
           <!-- if p.cur.status === 'removed' -->
           <pane-note>Removed page — this baseline no longer exists in the PR.</pane-note>
           <!-- if p.cur.baseUrl -->
-          <compare-single>
-            <img src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base')]" alt="Baseline screenshot of @[p.pretty]" />
-          </compare-single>
+          <compare-area fit="@[view.fit]">
+            <img src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base', view.fit)]" alt="Baseline screenshot of @[p.pretty]" />
+          </compare-area>
           <!-- /if -->
           <!-- /if -->
 
           <!-- if p.cur.status === 'changed' -->
+          <!-- if p.cur.baseUrl && p.cur.headUrl -->
+
           <!-- if view.mode === 'difference' -->
           <!-- if p.cur.diffUrl -->
-          <compare-single>
-            <img src="@[p.cur.diffUrl]" style="width: @[imgWidth(p.cur, 'diff')]" alt="Pixel difference of @[p.pretty]" />
-          </compare-single>
+          <compare-area fit="@[view.fit]">
+            <compare-stack>
+              <img base src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base', view.fit)]" alt="Baseline of @[p.pretty]" />
+              <img head src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head', view.fit)]; opacity: @[view.blend > 50 ? 1 : 0]" alt="PR version of @[p.pretty]" />
+              <img diff src="@[p.cur.diffUrl]" style="width: @[imgWidth(p.cur, 'diff', view.fit)]; opacity: @[(view.blend < 50 ? view.blend : 100 - view.blend) / 50]" alt="Pixel difference of @[p.pretty]" />
+            </compare-stack>
+          </compare-area>
+          <compare-slider>
+            <input type="range" min="0" max="100" step="0.1" value="@[view.blend]" oninput="$.view.blend = +this.value" title="Fade the difference away — base to the left, PR to the right" />
+          </compare-slider>
           <!-- else -->
           <pane-note stacked><icon spinner animate-spin></icon> Computing pixel difference…</pane-note>
           <!-- /if -->
-          <!-- else -->
-          <!-- if p.cur.baseUrl && p.cur.headUrl -->
+          <!-- /if -->
 
           <!-- if view.mode === 'split' -->
-          <compare-stack style="--split: @[view.split]%">
-            <img base src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base')]" alt="Baseline of @[p.pretty]" />
-            <img head clipped src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head')]" alt="PR version of @[p.pretty]" />
-            <split-handle onpointerdown="$.dragSplit(event)" title="Drag — PR left, base right"></split-handle>
-          </compare-stack>
+          <compare-area fit="@[view.fit]">
+            <compare-stack style="--split: @[view.blend]%">
+              <img base src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base', view.fit)]" alt="Baseline of @[p.pretty]" />
+              <img head clipped src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head', view.fit)]" alt="PR version of @[p.pretty]" />
+              <split-handle onpointerdown="$.dragSplit(event)" title="Drag — PR left, base right"></split-handle>
+            </compare-stack>
+          </compare-area>
+          <compare-slider>
+            <input type="range" min="0" max="100" step="0.1" value="@[view.blend]" oninput="$.view.blend = +this.value" title="Move the split — PR left, base right" />
+          </compare-slider>
           <!-- /if -->
 
           <!-- if view.mode === 'onion' -->
-          <compare-stack>
-            <img base src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base')]" alt="Baseline of @[p.pretty]" />
-            <img head src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head')]; opacity: @[view.onion / 100]" alt="PR version of @[p.pretty]" />
-          </compare-stack>
+          <compare-area fit="@[view.fit]">
+            <compare-stack>
+              <img base src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base', view.fit)]" alt="Baseline of @[p.pretty]" />
+              <img head src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head', view.fit)]; opacity: @[view.blend / 100]" alt="PR version of @[p.pretty]" />
+            </compare-stack>
+          </compare-area>
+          <compare-slider>
+            <input type="range" min="0" max="100" step="0.1" value="@[view.blend]" oninput="$.view.blend = +this.value" title="Blend base into PR" />
+          </compare-slider>
           <!-- /if -->
 
           <!-- if view.mode === 'twoup' -->
-          <two-up>
-            <figure>
-              <figcaption>base · overlens/dev</figcaption>
-              <img src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base')]" alt="Baseline of @[p.pretty]" />
-            </figure>
-            <figure>
-              <figcaption>PR #@[inspector.pr]</figcaption>
-              <img src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head')]" alt="PR version of @[p.pretty]" />
-            </figure>
-          </two-up>
+          <compare-area fit="@[view.fit]">
+            <two-up>
+              <figure>
+                <figcaption>base · overlens/dev</figcaption>
+                <img src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base', view.fit, 2)]" alt="Baseline of @[p.pretty]" />
+              </figure>
+              <figure>
+                <figcaption>PR #@[inspector.pr]</figcaption>
+                <img src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head', view.fit, 2)]" alt="PR version of @[p.pretty]" />
+              </figure>
+            </two-up>
+          </compare-area>
           <!-- /if -->
 
           <!-- else -->
           <pane-note stacked><icon spinner animate-spin></icon> Loading screenshots…</pane-note>
-          <!-- /if -->
           <!-- /if -->
           <!-- /if -->
 
