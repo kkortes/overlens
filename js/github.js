@@ -268,13 +268,12 @@ export const handleCallback = async () => {
 // width to the wider image, never upscaling past 1:1 (100cqw of the nearest
 // container). GitHub's swipe scales sides independently — this is the fix.
 // Fit mode caps the union box by the area's height too, so a whole page is
-// visible without scrolling; 2-up halves the width budget and pays the
-// caption row (--unit * 6) out of the height budget.
+// visible without scrolling; 2-up splits the width budget over its columns.
 window.imgWidth = (cur, which, fit, cols = 1) => {
   const w = Math.max(cur.baseW, cur.headW, 1);
   const h = Math.max(cur.baseH, cur.headH, 1);
   const nat = which === 'diff' ? w : cur[`${which}W`];
   const caps = [cols === 2 ? '(100cqw - var(--unit) * 3) / 2' : '100cqw', `${w}px`];
-  if (fit) caps.push(`${cols === 2 ? '(100cqh - var(--unit) * 6)' : '100cqh'} * ${(w / h).toFixed(6)}`);
+  if (fit) caps.push(`100cqh * ${(w / h).toFixed(6)}`);
   return `calc(min(${caps.join(', ')}) * ${(nat / w).toFixed(6)})`;
 };

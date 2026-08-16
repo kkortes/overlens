@@ -186,7 +186,7 @@
           <!-- if view.mode === 'difference' -->
           <!-- if p.cur.diffUrl -->
           <compare-area fit="@[view.fit]">
-            <compare-stack>
+            <compare-stack onpointerdown="$.dragBlend(event)">
               <img base src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base', view.fit)]" alt="Baseline of @[p.pretty]" />
               <img head src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head', view.fit)]; opacity: @[view.blend > 50 ? 1 : 0]" alt="PR version of @[p.pretty]" />
               <img diff src="@[p.cur.diffUrl]" style="width: @[imgWidth(p.cur, 'diff', view.fit)]; opacity: @[(view.blend < 50 ? view.blend : 100 - view.blend) / 50]" alt="Pixel difference of @[p.pretty]" />
@@ -202,10 +202,10 @@
 
           <!-- if view.mode === 'split' -->
           <compare-area fit="@[view.fit]">
-            <compare-stack style="--split: @[view.blend]%">
+            <compare-stack style="--split: @[view.blend]%" onpointerdown="$.dragBlend(event)">
               <img base src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base', view.fit)]" alt="Baseline of @[p.pretty]" />
               <img head clipped src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head', view.fit)]" alt="PR version of @[p.pretty]" />
-              <split-handle onpointerdown="$.dragSplit(event)" title="Drag — PR left, base right"></split-handle>
+              <split-handle title="Drag — PR left, base right"></split-handle>
             </compare-stack>
           </compare-area>
           <compare-slider>
@@ -215,7 +215,7 @@
 
           <!-- if view.mode === 'onion' -->
           <compare-area fit="@[view.fit]">
-            <compare-stack>
+            <compare-stack onpointerdown="$.dragBlend(event)">
               <img base src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base', view.fit)]" alt="Baseline of @[p.pretty]" />
               <img head src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head', view.fit)]; opacity: @[view.blend / 100]" alt="PR version of @[p.pretty]" />
             </compare-stack>
@@ -229,11 +229,9 @@
           <compare-area fit="@[view.fit]">
             <two-up>
               <figure>
-                <figcaption>base · overlens/dev</figcaption>
                 <img src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base', view.fit, 2)]" alt="Baseline of @[p.pretty]" />
               </figure>
               <figure>
-                <figcaption>PR #@[inspector.pr]</figcaption>
                 <img src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head', view.fit, 2)]" alt="PR version of @[p.pretty]" />
               </figure>
             </two-up>

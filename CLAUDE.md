@@ -54,9 +54,8 @@ GitHub OAuth code, everything else runs in the browser.
   well as its width and the whole page lands on screen; scroll is
   `inline-size` + `overflow: auto` and renders at 1:1. Either way the
   comparison centres in the area (`safe center` — an overflowing page still
-  starts at the top). 2-up splits the width budget in two, pays the caption
-  row out of the height budget, and hugs the gutter: base right-aligned, PR
-  left-aligned. At ≤768px the two floating bars unfix:
+  starts at the top). 2-up splits the width budget over its two columns and
+  hugs the gutter: base right-aligned, PR left-aligned. At ≤768px the two floating bars unfix:
   `overlens-inspector` becomes a grid and `top-left`/`top-right` go
   `display: contents`, so their children place themselves — logo and Sign in
   share row 1, repo meta and the controls get a row each, the carousel takes

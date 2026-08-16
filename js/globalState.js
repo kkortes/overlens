@@ -60,19 +60,27 @@ export default {
     this.view.fit = !this.view.fit;
     localStorage.setItem('overlens-fit', this.view.fit ? 'fit' : 'scroll');
   },
-  dragSplit(e) {
+  // Anywhere on the stack drives the blend. A mouse press lands on the spot
+  // it clicked; a finger has to travel sideways first, since the same surface
+  // pans the page vertically and touch-action hands us the gesture mid-swipe.
+  dragBlend(e) {
     e.preventDefault();
-    const track = e.currentTarget.parentElement;
+    const track = e.currentTarget;
+    let sliding = e.pointerType === 'mouse';
     const move = (ev) => {
+      if (!sliding && Math.abs(ev.clientX - e.clientX) < 4) return;
+      sliding = true;
       const r = track.getBoundingClientRect();
       $.view.blend = Math.round(Math.min(100, Math.max(0, ((ev.clientX - r.left) / r.width) * 100)) * 10) / 10;
     };
     const up = () => {
       removeEventListener('pointermove', move);
       removeEventListener('pointerup', up);
+      removeEventListener('pointercancel', up);
     };
     addEventListener('pointermove', move);
     addEventListener('pointerup', up);
-    move(e);
+    addEventListener('pointercancel', up);
+    if (sliding) move(e);
   },
 };
