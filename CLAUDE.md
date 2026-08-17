@@ -105,11 +105,3 @@ Vercel project on `kkortes/overlens`: [vercel.json](vercel.json) sets
    id + secret into Vercel env.
 2. Link the Vercel project to `kkortes/overlens` — live at
    `https://overlens.korte.kim`.
-
-## Pending upstream
-
-vibe's `fetchable-src-parking` branch (local repo) stops the browser from
-fetching literal `@[...]` src bindings on template mount — verified here.
-Until it ships as `@ape-egg/vibe` 3.0.5 and the dependency is bumped, dev
-consoles show harmless 404s for `@[p.cur.*Url]` requests (npm 3.0.4 lacks
-the fix; `bun run compile` reinstalls it into `compiled/`).

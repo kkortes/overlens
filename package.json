@@ -9,10 +9,10 @@
   },
   "dependencies": {
     "@ape-egg/codie": "^0.1.3",
-    "@ape-egg/vibe": "^3.0.4"
+    "@ape-egg/vibe": "^3.0.5"
   },
   "devDependencies": {
-    "@ape-egg/vibe-compiler": "^3.0.4"
+    "@ape-egg/vibe-compiler": "^3.0.5"
   },
   "vibe-compiler": {
     "source": "./",
