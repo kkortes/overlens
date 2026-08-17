@@ -205,11 +205,11 @@
             <compare-stack style="--split: @[view.blend]%" onpointerdown="$.dragBlend(event)">
               <img base src="@[p.cur.baseUrl]" style="width: @[imgWidth(p.cur, 'base', view.fit)]" alt="Baseline of @[p.pretty]" />
               <img head clipped src="@[p.cur.headUrl]" style="width: @[imgWidth(p.cur, 'head', view.fit)]" alt="PR version of @[p.pretty]" />
-              <split-handle title="Drag — PR left, base right"></split-handle>
+              <split-handle title="Drag — base left, PR right"></split-handle>
             </compare-stack>
           </compare-area>
           <compare-slider>
-            <input type="range" min="0" max="100" step="0.1" value="@[view.blend]" oninput="$.view.blend = +this.value" title="Move the split — PR left, base right" />
+            <input type="range" min="0" max="100" step="0.1" value="@[view.blend]" oninput="$.view.blend = +this.value" title="Move the split — base left, PR right" />
           </compare-slider>
           <!-- /if -->
 

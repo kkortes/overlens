@@ -298,7 +298,7 @@ compare-pane img {
 }
 
 compare-stack img[clipped] {
-  clip-path: inset(0 calc(100% - var(--split)) 0 0);
+  clip-path: inset(0 0 0 var(--split));
 }
 
 compare-slider {

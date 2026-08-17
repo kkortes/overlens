@@ -33,11 +33,13 @@ GitHub OAuth code, everything else runs in the browser.
   workflow's diffPercent, which only counts the shared area.
 - **[components/Inspector.html](components/Inspector.html)** — stylecheat
   fullpage vertical carousel, one slide per page. One mode group: Difference
-  (default), Split (clip-path + drag handle, PR left / base right), Onion
+  (default), Split (clip-path + drag handle, base left / PR right), Onion
   (opacity), 2-up (shared-scale columns). Every mode but 2-up shares one
   slider, in a bar stuck to the bottom of the card: `view.blend` runs 0 =
-  base to 100 = PR, starts at 50 and survives mode switches. Split's drag
-  handle writes the same value, so either one moves both. Difference layers
+  base to 100 = PR, starts at 50 and survives mode switches — except Split,
+  where the value is the divider's position (base shows left of it, PR
+  right). Split's drag handle writes the same value, so either one moves
+  both. Difference layers
   the diff PNG over whichever design the slider leans to — base below 50, PR
   above — at an opacity peaking at 50 and reaching 0 at both ends, so the red
   thins and colour returns as you slide toward either side.
