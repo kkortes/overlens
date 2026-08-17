@@ -36,7 +36,7 @@ GitHub OAuth code, everything else runs in the browser.
   (default), Split (clip-path + drag handle, base left / PR right), Onion
   (opacity), 2-up (shared-scale columns). Every mode but 2-up shares one
   slider, in a bar stuck to the bottom of the card: `view.blend` runs 0 =
-  base to 100 = PR, starts at 50 and survives mode switches — except Split,
+  base to 100 = PR and resets to 50 on every mode switch — except in Split,
   where the value is the divider's position (base shows left of it, PR
   right). Split's drag handle writes the same value, so either one moves
   both. Difference layers

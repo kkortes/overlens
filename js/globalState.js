@@ -54,6 +54,7 @@ export default {
   },
   setMode(mode) {
     this.view.mode = mode;
+    this.view.blend = 50;
     if (mode === 'difference') ensureDiffs();
   },
   toggleFit() {

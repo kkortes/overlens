@@ -153,7 +153,8 @@ control-group button:not(:first-child) {
   margin-left: -1px;
 }
 
-inspector-controls button[active] {
+inspector-controls button[active],
+slide-tools button[active] {
   background: var(--accent);
   color: var(--accent-foreground);
   border-color: var(--accent-foreground);
