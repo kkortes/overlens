@@ -187,6 +187,9 @@ export const loadInspector = async ({ owner, repo, n }) => {
     drift: false,
     report: null,
     pages: [],
+    passes: [],
+    viewports: [],
+    themes: [],
   });
   document.title = `${owner}/${repo} #${n} · Overlens`;
 
@@ -229,8 +232,18 @@ export const loadInspector = async ({ owner, repo, n }) => {
   ins.report = { baseSha: report.baseSha, sourcePr: report.sourcePr, sourceSha: report.sourceSha };
   ins.drift = !!(report.baseSha && base.sha && report.baseSha !== base.sha);
   ins.pages = groupPages(report.pages);
+  // The config's ordered pass list — its first entry is the landing variant,
+  // and only its viewports/themes are offered. Reports from before the field
+  // existed fall back to the variants the pages themselves carry.
+  const passes = report.passes?.length
+    ? report.passes
+    : [...new Set((report.pages ?? []).map((e) => e.file.split('/')[0]))];
+  ins.passes = passes;
+  ins.viewports = [...new Set(passes.map((p) => p.split('-')[0]))];
+  ins.themes = [...new Set(passes.map((p) => p.split('-')[1]))];
   ins.phase = ins.pages.length ? 'ready' : 'clean';
-  loadVariant($.view.variant);
+  const variant = passes.includes($.view.variant) ? $.view.variant : passes[0];
+  if (variant) $.jumpVariant(variant);
 };
 
 export const signIn = () => {

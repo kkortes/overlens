@@ -28,14 +28,20 @@
         <button secondary active="@[view.mode === 'onion']" onclick="$.setMode('onion')">Onion</button>
         <button secondary active="@[view.mode === 'twoup']" onclick="$.setMode('twoup')">2-up</button>
       </control-group>
+      <!-- if inspector.viewports.length > 1 -->
       <control-group>
-        <button secondary active="@[view.viewport === 'desktop']" onclick="$.setViewport('desktop')" title="Desktop viewport"><icon desktop></icon></button>
-        <button secondary active="@[view.viewport === 'mobile']" onclick="$.setViewport('mobile')" title="Smartphone viewport"><icon smartphone></icon></button>
+        <!-- each inspector.viewports as vp -->
+        <button secondary active="@[view.viewport === vp]" onclick="$.setViewport('@[vp]')" title="@[vp] viewport"><icon class="@[vp === 'mobile' ? 'smartphone' : 'desktop']"></icon></button>
+        <!-- /each -->
       </control-group>
+      <!-- /if -->
+      <!-- if inspector.themes.length > 1 -->
       <control-group>
-        <button secondary active="@[view.theme === 'light']" onclick="$.setTheme('light')" title="Light theme"><icon light></icon></button>
-        <button secondary active="@[view.theme === 'dark']" onclick="$.setTheme('dark')" title="Dark theme"><icon dark></icon></button>
+        <!-- each inspector.themes as t -->
+        <button secondary active="@[view.theme === t]" onclick="$.setTheme('@[t]')" title="@[t] theme"><icon class="@[t]"></icon></button>
+        <!-- /each -->
       </control-group>
+      <!-- /if -->
     </inspector-controls>
     <!-- /if -->
     <component src="/components/AuthBar.html"></component>

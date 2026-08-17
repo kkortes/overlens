@@ -4,9 +4,9 @@ import { loadVariant, ensureDiffs, signIn, signOut } from '/js/github.js';
 export default {
   modal: '',
   view: {
-    viewport: 'desktop',
-    theme: 'light',
-    variant: 'desktop-light',
+    viewport: '',
+    theme: '',
+    variant: '',
     mode: 'difference',
     blend: 50,
     fit: localStorage.getItem('overlens-fit') !== 'scroll',
@@ -22,6 +22,9 @@ export default {
     drift: false,
     report: null,
     pages: [],
+    passes: [],
+    viewports: [],
+    themes: [],
   },
   auth: {
     authed: !!localStorage.getItem('overlens-token'),
@@ -46,11 +49,17 @@ export default {
     const same = `${viewport}-${this.view.theme}`;
     this.jumpVariant(variants[same] ? same : Object.keys(variants).find((k) => k.startsWith(viewport)));
   },
+  // A pass grid can be sparse (desktop-dark + desktop-light + mobile-light):
+  // when the straight swap doesn't exist, land on that axis' first pass.
   setViewport(viewport) {
-    this.jumpVariant(`${viewport}-${this.view.theme}`);
+    const { passes } = this.inspector;
+    const same = `${viewport}-${this.view.theme}`;
+    this.jumpVariant(passes.includes(same) ? same : passes.find((p) => p.startsWith(`${viewport}-`)));
   },
   setTheme(theme) {
-    this.jumpVariant(`${this.view.viewport}-${theme}`);
+    const { passes } = this.inspector;
+    const same = `${this.view.viewport}-${theme}`;
+    this.jumpVariant(passes.includes(same) ? same : passes.find((p) => p.endsWith(`-${theme}`)));
   },
   setMode(mode) {
     this.view.mode = mode;
