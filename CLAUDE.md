@@ -64,6 +64,19 @@ GitHub OAuth code, everything else runs in the browser.
   the rest. Those rules are scoped to `overlens-inspector`; the landing
   reuses the same element names with its own fixed header.
 - **css/stylecheat.css** — vendored hybrid build (`<body stylecheat dark>`).
+- **[.github/workflows/overlens.yml](.github/workflows/overlens.yml)** — the
+  reusable workflow (`workflow_call`) consumers reference from a ~20-line
+  trigger workflow ([templates/overlens.yml](templates/overlens.yml)). It
+  checks out its own repo via `job.workflow_repository`/`job.workflow_sha`,
+  so a caller pinned to a tag gets that tag's crawl engine. Inputs:
+  `environments` (regex a deployment's environment must match, default
+  `Preview|Production`), `inspector` (report link origin) and `runner`
+  (label, default `ubuntu-latest`). The crawl runs
+  in the pinned Playwright container with
+  [crawler/](crawler/overlens.spec.ts)'s own exact-pinned `@playwright/test`
+  — the container tag and the pin move together, consumers install nothing.
+  The consumer's `overlens.config` is imported by bun with no install, so it
+  must stay dependency-free (type-only imports are erased and fine).
 
 ## Data contract
 

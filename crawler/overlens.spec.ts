@@ -2,7 +2,9 @@ import { writeFileSync } from "fs";
 
 import { expect, test, type Page } from "@playwright/test";
 
-import overlens from "../overlens.config";
+// The workflow runs this from .overlens/crawler inside the consumer's
+// workspace — the repo's overlens.config sits two levels up.
+import overlens from "../../overlens.config";
 
 test.skip(!process.env.OVERLENS, "overlens crawl runs in CI only");
 test.describe.configure({ retries: 0 });

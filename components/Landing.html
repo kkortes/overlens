@@ -74,22 +74,23 @@
       </guide-head>
       <p>
         Overlens rides on your deploys: every successful GitHub "Preview" or
-        "Production" deployment (Vercel emits these out of the box) triggers a
-        crawl that screenshots every reachable page and pushes the snapshot
-        branches this site reads. The crawler is an ordinary visitor, so the
+        "Production" deployment (Vercel emits these out of the box; other
+        hosts' environment names are one input away) triggers a crawl that
+        screenshots every reachable page and pushes the snapshot branches
+        this site reads. The crawler is an ordinary visitor, so the
         deploy has to be reachable without a login — Vercel's deployment
         protection turns every page into the same auth wall.
       </p>
       <p>
-        The repo needs Bun and
-        <a href="https://playwright.dev" target="_blank" rel="noopener" primary>Playwright</a>,
-        which we have to thank for making all of this possible — add
-        <code>@playwright/test</code> to your dev dependencies and keep the
-        workflow's container tag on that same version. The crawl runs inside
-        that image so every snapshot rasterises text on one font stack —
-        render a baseline on one runner image and a PR on another and every
-        glyph shifts a subpixel, which reads as every page having changed.
-        Three files make the integration:
+        The crawl engine, the diffing and the PR reporting live in a reusable
+        workflow versioned with this inspector — it brings its own
+        <a href="https://playwright.dev" target="_blank" rel="noopener" primary>Playwright</a>
+        (which we have to thank for making all of this possible), pinned to a
+        matching container image so every snapshot rasterises text on one
+        font stack — render a baseline on one runner image and a PR on
+        another and every glyph shifts a subpixel, which reads as every page
+        having changed. Your repo installs nothing. Two files make the
+        integration:
       </p>
 
       <guide-step>
@@ -107,23 +108,12 @@
       </guide-step>
 
       <guide-step>
-        <h3><step-no>2</step-no> <code>tests/overlens.spec.ts</code></h3>
+        <h3><step-no>2</step-no> <code>.github/workflows/overlens.yml</code></h3>
         <p>
-          The generic crawl engine: follows every root-relative link, dedupes
-          screenshots by path shape, waits for each page to stop changing
-          before it shoots, freezes the clock and masks volatile content. It
-          only reads the config, so tuning the crawl never means editing this
-          file.
-        </p>
-        <template codie highlight-js dark data-src="overlens.spec.ts"></template>
-      </guide-step>
-
-      <guide-step>
-        <h3><step-no>3</step-no> <code>.github/workflows/overlens.yml</code></h3>
-        <p>
-          Runs the crawl when a preview deploy succeeds, diffs the output
-          against the baseline, pushes the snapshot branches and maintains a
-          summary in the source PR's description.
+          Just the triggers and permissions — the reusable workflow it
+          references crawls every successful deploy, diffs the output against
+          the baseline, pushes the snapshot branches and maintains a summary
+          in the source PR's description.
         </p>
         <template codie highlight-js dark data-src="overlens.yml"></template>
       </guide-step>

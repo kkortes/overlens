@@ -1,3 +1,7 @@
+// The workflow imports this file straight from source, with no install:
+// relative imports to your own files are fine, npm dependencies aren't.
+// The Playwright type below is erased at runtime — add @playwright/test as a
+// dev dependency for the editor if you don't have it; the crawl ships its own.
 import type { Page } from "@playwright/test";
 
 export type OverlensPass = {
