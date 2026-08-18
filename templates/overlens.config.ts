@@ -11,7 +11,8 @@ export type OverlensPass = {
 };
 
 export type OverlensConfig = {
-  firstPageToVisit: string;
+  pagesIncluded?: string[];
+  pagesExcluded?: string[];
   targetBranch: string;
   passes: OverlensPass[];
   theme: (page: Page, theme: OverlensPass["theme"]) => Promise<unknown>;
@@ -26,9 +27,12 @@ export type OverlensConfig = {
 };
 
 const config: OverlensConfig = {
-  // The crawl entry point — every root-relative link is followed from here.
-  // In CI the workflow sets PLAYWRIGHT_BASE_URL to the preview deploy URL.
-  firstPageToVisit: `${process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000"}/`,
+  // The entry pages the crawl starts from — every root-relative link is
+  // followed. Paths resolve against the deploy URL (the workflow sets
+  // PLAYWRIGHT_BASE_URL); absolute URLs work too, e.g. a vendor subdomain.
+  // pagesIncluded: ["/"],
+  // Subtrees the crawl must not enter.
+  // pagesExcluded: ["/admin"],
   // The branch Overlens compares PRs against. Its snapshots become the
   // baseline, pushed to a branch always named overlens/dev — the name the
   // inspector reads — no matter what your branch is called.
