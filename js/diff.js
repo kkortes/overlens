@@ -1,10 +1,10 @@
 // Client-side pixel diff over the union canvas of both images: mismatching
-// pixels (per-channel tolerance ~2%, like the workflow's fuzz) paint red over
+// pixels (per-channel tolerance ~5%, like the workflow's fuzz) paint red over
 // a dimmed base. Areas only one image covers — height or width deltas — are
 // no comparison at all: they render dimmed like matching pixels, so only
 // overlapping content can go red — mirroring the workflow's diffPercent,
 // which counts mismatches within the shared area only.
-const TOLERANCE = 255 * 0.02;
+const TOLERANCE = 255 * 0.05;
 
 export default async (baseBlob, headBlob) => {
   const [base, head] = await Promise.all([createImageBitmap(baseBlob), createImageBitmap(headBlob)]);

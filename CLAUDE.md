@@ -27,7 +27,7 @@ GitHub OAuth code, everything else runs in the browser.
   the pr ref with a visible repo = `no-data`; invisible repo or 401/403 =
   `gate`; missing report.json = `no-report`; empty `pages` = `clean`.
 - **[js/diff.js](js/diff.js)** — the Difference mode: canvas pixel diff over
-  the union of both images (~2% per-channel fuzz, like the workflow), red over
+  the union of both images (~5% per-channel fuzz, like the workflow), red over
   a dimmed base, computed lazily and cached per (page, variant). Area only one
   image covers (height deltas) renders dimmed, never red — matching the
   workflow's diffPercent, which only counts the shared area.
