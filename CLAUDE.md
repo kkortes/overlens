@@ -10,7 +10,7 @@ GitHub OAuth code, everything else runs in the browser.
 
 - `bun dev` — `vibe compile --watch` + Bun static server with SPA fallback
   ([dev.js](dev.js)), wrapped by `../dev.sh` (Caddy proxy at
-  `https://overlens.test`, honors `$PORT`)
+  `https://overlens.localhost`, honors `$PORT`)
 - `bun run compile` — one-off build to `compiled/` (what Vercel runs)
 
 ## Architecture

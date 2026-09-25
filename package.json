@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "../dev.sh 'bun dev.js'",
+    "dev": "\"$(git rev-parse --path-format=absolute --git-common-dir)/../../dev.sh\" 'bun dev.js'",
     "compile": "bun node_modules/@ape-egg/vibe-compiler/bin/vibe-compile.js"
   },
   "dependencies": {
