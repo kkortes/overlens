@@ -67,7 +67,7 @@ GitHub OAuth code, everything else runs in the browser.
 - **`ApeEgg/overlens-action`** (public repo, sibling checkout at
   `../overlens-action`) — the reusable workflow (`workflow_call`) plus the
   crawl engine, referenced from a ~20-line trigger workflow in each consumer
-  ([templates/overlens.yml](templates/overlens.yml), pinned `@v3` — each tag
+  ([templates/overlens.yml](templates/overlens.yml), pinned `@v4` — each tag
   marks one engine commit, so cut a new tag on engine changes and bump the
   pin). The workflow checks out its own repo via
   `job.workflow_repository`/`job.workflow_sha`, so a caller's pinned tag
