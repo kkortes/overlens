@@ -56,7 +56,9 @@
         screenshots to <code>overlens/dev</code> and <code>overlens/pr-{n}</code>
         branches. This site reads those branches — tip against tip — and renders
         what a merge would mean today: Split, Onion, 2-up and a pixel-level
-        Difference, at both viewports and in both themes.
+        Difference, at both viewports and in both themes. Buttons marked with
+        <code>data-overlens-press</code> are pressed, and the drawer or dialog
+        each opens is shot too, as its own slide.
       </p>
       <p>
         The baseline is whichever branch the repo's config names in
@@ -131,6 +133,82 @@
         so a PR opened before then honestly reports every page as new — that
         first run is the baseline being born, not a regression.
       </p>
+
+      <guide-step>
+        <h3>Pressed states — <code>data-overlens-press</code></h3>
+        <p>
+          A drawer, menu or dialog only exists after a click, so a plain crawl
+          never sees it. Mark the element that opens it with a bare
+          <code>data-overlens-press</code> and every pass presses it once the
+          page itself is shot, waits for running animations to finish and the
+          page to settle, then shoots <code>&lt;page&gt;~&lt;name&gt;.png</code>.
+          Marks inside the opened state are pressed next, as
+          <code>&lt;page&gt;~&lt;name&gt;~&lt;nested&gt;.png</code>. Each state is
+          its own page in the report and its own slide here.
+        </p>
+        <template codie highlight-html dark>
+          <button data-overlens-press>Edit</button>
+
+          <dialog open aria-label="Edit customer">
+            <button data-overlens-press>Delete</button>
+          </dialog>
+        </template>
+        <p>
+          The attribute counts bare, empty or <code>"true"</code> — what React
+          renders for a bare JSX <code>data-overlens-press</code>. Any other
+          value, <code>"false"</code> included, isn't a press. The state is
+          named after what the press opened: the topmost
+          <code>dialog[open]</code>, <code>[role=dialog]</code>,
+          <code>[role=alertdialog]</code>, <code>[aria-modal=true]</code>,
+          <code>[role=menu]</code> or <code>[role=listbox]</code> that wasn't on
+          top before, by its <code>aria-label</code>, else its
+          <code>aria-labelledby</code> text, else its first heading — the
+          example above shoots <code>&lt;page&gt;~edit-customer.png</code>. When
+          nothing new opened, the press's own <code>aria-label</code> or text
+          names it, and its place among the page's presses is the last resort.
+        </p>
+        <p>
+          A name is shot once per pass across the whole crawl: ten rows opening
+          the same drawer, or one drawer opened from several pages, give one
+          snapshot, filed under the first page that reached it. A dialog titled
+          with data — a customer, an episode — is a new state for every value,
+          so give it a fixed <code>aria-label</code>. A menu or listbox a press
+          opens isn't shot: its marked items are pressed and named as if they
+          sat on the page. No element is pressed twice within a page's crawl,
+          so a button still visible behind its own drawer isn't opened again.
+        </p>
+        <p>
+          Only marks on screen count: not hidden, not <code>inert</code>, not
+          parked off-canvas like a closed drawer. Every state starts from a
+          fresh load and replays its clicks, but anything a press saves outside
+          the page — localStorage, the server — carries into the next state, so
+          only mark presses that open things. Each press is a full page load
+          against <code>timeoutMinutes</code>, even when its state was already
+          shot.
+        </p>
+      </guide-step>
+
+      <guide-step>
+        <h3>Masks — <code>data-overlens-mask</code></h3>
+        <p>
+          Content that changes on every render — a clock, an avatar, a live
+          counter — would read as a change on every run. Mark it and every
+          screenshot, pressed states included, covers it with a solid box.
+        </p>
+        <template codie highlight-html dark>
+          <time data-overlens-mask>12:04</time>
+        </template>
+        <p>
+          The attribute counts bare, empty or <code>"true"</code> — what React
+          renders for a bare JSX <code>data-overlens-mask</code>. Any other
+          value, <code>"false"</code> included, leaves the element unmasked.
+          The config's <code>mask</code> adds CSS selectors on top for markup
+          you can't annotate; it never replaces the attribute. The attribute
+          takes over from <code>data-apply-playwright-mask</code>, which is no
+          longer masked unless your config lists it.
+        </p>
+      </guide-step>
+
       <p>
         On a private repo, sign in with GitHub up top and install the Overlens
         app on it. The inspector holds nothing of yours; it reads your snapshot

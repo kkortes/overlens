@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   overlens:
-    uses: apeegg/overlens-action/.github/workflows/overlens.yml@v1
+    uses: apeegg/overlens-action/.github/workflows/overlens.yml@v3
     permissions:
       contents: write
       pull-requests: write
