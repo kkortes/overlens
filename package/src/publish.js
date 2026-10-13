@@ -2,9 +2,7 @@ import { $ } from 'bun';
 import { cpSync, existsSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
 
-import { remote, sha } from './github.js';
-
-const lines = (text) => text.split('\n').filter(Boolean);
+import { lines, remote, sha } from './github.js';
 
 // diffPercent counts mismatches within the area both images share; `pad` is
 // what only the larger one covers, so a height-only change reads 0 here.

@@ -116,13 +116,15 @@
       <guide-step>
         <h3><step-no>2</step-no> <code>.github/workflows/overlens.yml</code></h3>
         <p>
-          The triggers, the permissions and
-          <code>bunx @ape-egg/overlens@1</code>, which crawls every successful
-          deploy, diffs the output against the baseline, pushes the snapshot
-          branches and maintains a summary in the source PR's description.
-          Pinning <code>@1</code> takes every release short of a breaking
-          one. Hosts other than Vercel name their environments differently:
-          set <code>ENVIRONMENTS</code> to a regex that matches them.
+          The trigger, the token's permissions and
+          <code>bunx @ape-egg/overlens@1</code>, which checks out each
+          successful deploy itself, crawls it, diffs the output against the
+          baseline, pushes the snapshot branches, maintains a summary in the
+          source PR's description and cleans up after closed PRs. Pinning
+          <code>@1</code> takes every release short of a breaking one. Hosts
+          other than Vercel name their environments differently: add
+          <code>ENVIRONMENTS</code>, a regex that matches them, next to
+          <code>GH_TOKEN</code>.
         </p>
         <template codie highlight-js dark data-src="overlens.yml"></template>
       </guide-step>

@@ -12,37 +12,21 @@ git add -A && git commit -m "add overlens" && git push
 ```
 
 - `overlens.config.ts`: the entry pages, the viewport/theme passes, how your app switches theme and the `targetBranch` PRs are compared against.
-- `.github/workflows/overlens.yml`: triggers, permissions and `bunx @ape-egg/overlens@1`:
+- `.github/workflows/overlens.yml`: the trigger, the token's permissions and `bunx @ape-egg/overlens@1`:
 
 ```yaml
-name: Overlens
-on:
-  deployment_status:
-  pull_request:
-    types: [closed]
-
-concurrency:
-  group: overlens-${{ github.event.deployment.ref || github.event.pull_request.number }}
-  cancel-in-progress: true
-
-permissions:
-  contents: write
-  pull-requests: write
-
+on: deployment_status
+permissions: { contents: write, pull-requests: write }
 jobs:
   overlens:
-    if: github.event_name == 'pull_request' || github.event.deployment_status.state == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 80
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
       - run: bunx @ape-egg/overlens@1
-        env:
-          GH_TOKEN: ${{ github.token }}
+        env: { GH_TOKEN: "${{ github.token }}" }
 ```
+
+Every other line a workflow usually carries is the package's job. It checks out the deployed commit itself, skips deployments that didn't succeed, skips a deploy that's no longer its branch's tip (before the crawl and again before pushing), and retires the snapshot branch and draft PR of every closed PR on the next successful deploy.
 
 The crawl runs in the Playwright container image matching the crawler's own exact-pinned Playwright, so the runner needs Docker (every GitHub-hosted Linux runner has it). Your repo installs nothing, and your `overlens.config` is imported straight from source, so it must stay free of npm dependencies (type-only imports are erased and fine).
 
@@ -50,7 +34,7 @@ Land it on `targetBranch` first: until that branch has deployed once there is no
 
 ## Environment
 
-All optional — the defaults cover Vercel.
+All optional — the defaults cover Vercel. Set them on the bunx step, e.g. `env: { GH_TOKEN: "${{ github.token }}", ENVIRONMENTS: "Staging" }`.
 
 | variable | default | |
 | --- | --- | --- |
@@ -61,10 +45,10 @@ The job's `runs-on` picks the runner.
 
 ## Commands
 
-The workflow runs `overlens` with no argument; it acts on the event:
+The workflow runs `overlens` with no argument on `deployment_status`:
 
-- `deployment_status`: a successful deployment with a URL, whose environment matches `ENVIRONMENTS`, at a commit carrying an `overlens.config`, is crawled. A deploy of `targetBranch` becomes the baseline on `overlens/dev`; a deploy of a branch with an open PR lands on `overlens/pr-{n}` with a `report.json`, a draft PR into `overlens/dev` when pages changed (unless `createPR: false`), and a summary between `<!-- overlens:summary -->` markers in the source PR's description. A deploy that's no longer its branch's tip is skipped.
-- `pull_request` `closed`: closes the PR's draft snapshot PR and deletes `overlens/pr-{n}`.
+- A successful deployment with a URL, whose environment matches `ENVIRONMENTS`, at a commit carrying an `overlens.config`, is crawled. A deploy of `targetBranch` becomes the baseline on `overlens/dev`; a deploy of a branch with an open PR lands on `overlens/pr-{n}` with a `report.json`, a draft PR into `overlens/dev` when pages changed (unless `createPR: false`), and a summary between `<!-- overlens:summary -->` markers in the source PR's description. A deploy that's no longer its branch's tip, or of a branch without an open PR, is skipped.
+- Every successful deployment first closes the draft snapshot PR and deletes `overlens/pr-{n}` of each PR closed since.
 
 `overlens init` also runs by name.
 

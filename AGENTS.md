@@ -76,18 +76,24 @@ GitHub OAuth code, everything else runs in the browser. The npm package
 
 ## Package
 
-`@ape-egg/overlens` runs as `bunx @ape-egg/overlens@1` from a ~30-line
-workflow in each consumer ([templates/overlens.yml](package/templates/overlens.yml):
-checkout with full history, setup-bun, the bunx step with `GH_TOKEN`).
-[bin/overlens.js](package/bin/overlens.js) dispatches on `GITHUB_EVENT_NAME`
-(or `init` by name). Inputs are env vars: `ENVIRONMENTS` (regex a
+`@ape-egg/overlens` runs as `bunx @ape-egg/overlens@1` from a 9-line
+workflow in each consumer ([templates/overlens.yml](package/templates/overlens.yml)):
+`on: deployment_status`, the token's two write permissions, `runs-on`,
+setup-bun and the bunx step with `GH_TOKEN` — GitHub hands the token to a
+step only when the workflow passes it. Everything else lives in the package,
+so keep the file that small: no checkout, no concurrency, no job `if`, no
+`pull_request` trigger. [bin/overlens.js](package/bin/overlens.js) runs on
+`deployment_status` (or `init` by name). Inputs are env vars: `ENVIRONMENTS` (regex a
 deployment's environment must match, default `Preview|Production`) and
 `INSPECTOR` (report link origin); the job's `runs-on` picks the runner.
 
-- [snapshot.js](package/src/snapshot.js) — `deployment_status`: a successful
-  deploy with a URL, a matching environment and an `overlens.config` at that
-  commit is crawled; then the branch resolves to `dev` (`targetBranch`),
-  `pr-N` (an open PR) or nothing (superseded deploy, no PR).
+- [snapshot.js](package/src/snapshot.js) — a successful deploy with a URL
+  and a matching environment is fetched (`git fetch --depth 1` of the
+  deployed sha into the empty workspace). With an `overlens.config` there,
+  the branch resolves through `branches-where-head`: `dev` (`targetBranch`),
+  `pr-N` (an open PR) or nothing (superseded deploy, no PR). It resolves
+  again after the crawl and publishes only when the answer still holds —
+  that stands in for the old workflow's `cancel-in-progress` concurrency.
 - [crawl.js](package/src/crawl.js) — copies [crawler/](package/crawler/) to
   `.overlens/crawler` in the checkout, so the spec's `../../overlens.config`
   import resolves, and runs it with `docker run` in
@@ -105,8 +111,10 @@ deployment's environment must match, default `Preview|Production`) and
   (file list and mermaid sitemap) and the source PR's summary between
   `<!-- overlens:summary -->` markers, headed "This PR was visually scanned
   through Overlens" linked to the site.
-- [cleanup.js](package/src/cleanup.js) — `pull_request` `closed`: closes the
-  draft PR and deletes `overlens/pr-N`.
+- [cleanup.js](package/src/cleanup.js) — every successful deploy first
+  sweeps the `overlens/pr-*` branches: a PR no longer open gets its draft PR
+  closed and its branch deleted. That replaces the `pull_request: closed`
+  trigger.
 
 ## Data contract
 

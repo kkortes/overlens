@@ -1,34 +1,9 @@
-name: Overlens
-
-# Every successful deployment is crawled and diffed: Vercel reports one per
-# preview and production deploy. A closed PR takes its snapshot branch and
-# draft PR with it.
-on:
-  deployment_status:
-  pull_request:
-    types: [closed]
-
-concurrency:
-  group: overlens-${{ github.event.deployment.ref || github.event.pull_request.number }}
-  cancel-in-progress: true
-
-permissions:
-  contents: write
-  pull-requests: write
-
+on: deployment_status
+permissions: { contents: write, pull-requests: write }
 jobs:
   overlens:
-    if: github.event_name == 'pull_request' || github.event.deployment_status.state == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 80
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
       - run: bunx @ape-egg/overlens@1
-        env:
-          GH_TOKEN: ${{ github.token }}
-          # The defaults cover Vercel — both are optional.
-          # ENVIRONMENTS: Preview|Production  # regex a deployment's environment must match
-          # INSPECTOR: https://overlens.korte.kim  # origin the report links point to
+        env: { GH_TOKEN: "${{ github.token }}" }
