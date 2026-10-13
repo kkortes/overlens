@@ -155,15 +155,46 @@
         </template>
         <p>
           The value names the state and is its identity: elements sharing one
-          are a single press, and no press is clicked twice in a page's crawl.
-          Always give one — a bare attribute falls back to the element's DOM
-          position (<code>home~2.1.3</code>), which moves whenever the markup
-          does. Only marks on screen count: not hidden, not <code>inert</code>,
-          not parked off-canvas like a closed drawer. Every state starts from
+          are a single press, and a valued press is shot once per pass across
+          the whole crawl — the same drawer opened from several pages is one
+          state, filed under the first page that reached it. So give each
+          distinct state its own value, and the same value wherever it opens
+          the same thing. A bare attribute, or <code>"true"</code> (what React
+          renders for a bare JSX <code>data-overlens-press</code>), is named by
+          its place among the page's presses — the page's 3rd is
+          <code>&lt;page&gt;~3</code>, a number that shifts when the page's data
+          adds or removes presses before it. No element is pressed twice within
+          a page's crawl, so a button still visible behind its own drawer isn't
+          opened again. A dropdown menu is just another press: mark its toggle,
+          and a press inside the open menu is followed like any nested one —
+          there is no separate <code>data-overlens-reveal</code>. Only marks on
+          screen count: not hidden, not <code>inert</code>, not parked
+          off-canvas like a closed drawer. Every state starts from
           a fresh load and replays its clicks, but anything a press saves
           outside the page — localStorage, the server — carries into the next
           state, so only mark presses that open things. Each state is a full
           page load against <code>timeoutMinutes</code>.
+        </p>
+      </guide-step>
+
+      <guide-step>
+        <h3>Masks — <code>data-overlens-mask</code></h3>
+        <p>
+          Content that changes on every render — a clock, an avatar, a live
+          counter — would read as a change on every run. Mark it and every
+          screenshot, pressed states included, covers it with a solid box.
+        </p>
+        <template codie highlight-html dark>
+          <time data-overlens-mask>12:04</time>
+        </template>
+        <p>
+          The attribute counts bare, empty or <code>"true"</code> — what React
+          renders for a bare JSX <code>data-overlens-mask</code>. Any other
+          value, <code>"false"</code> included, leaves the element unmasked.
+          The config's <code>mask</code> adds CSS selectors on top for markup
+          you can't annotate; it never replaces the attribute. The attribute
+          takes over from <code>data-apply-playwright-mask</code>, which is no
+          longer masked unless your config lists it.
         </p>
       </guide-step>
 

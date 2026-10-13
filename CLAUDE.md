@@ -96,11 +96,22 @@ report.json                                      overlens/pr-* branches only, at
 Pressed states come from elements marked `data-overlens-press="<state>"`:
 after a page's own shots each pass presses every one on screen, waits out
 animations and the page settling, and shoots the opened state; marks that
-state reveals are pressed next, chained with `~`. A bare attribute names the
-state by DOM position (`home~2.1.3`). Each state is its own entry in
-`report.json`, so the inspector gives it its own slide with no special
-handling — the slide label reads `customers / [id]~edit-drawer`. The install
-guide documents the attribute; the engine README holds the full rules.
+state reveals are pressed next, chained with `~`. A valued press is shot once
+per pass across the whole crawl, filed under the first page that reached it.
+A bare attribute (or `"true"`, React's bare JSX data-* attribute) is named by
+page and nth — its place among the page's presses, `<page>~3`. Menus are
+plain presses: `data-overlens-reveal` was dropped before release. Each state
+is its own entry in `report.json`, so the inspector gives it its own slide
+with no special handling — the slide label reads
+`customers / [id]~edit-drawer`. The install guide documents the attribute;
+the engine README holds the full rules.
+
+Masks come from elements carrying `data-overlens-mask`, bare, empty or
+`"true"` — any other value, `"false"` included, is unmasked. Every shot,
+pressed states too, covers them with a solid box. `config.mask` adds CSS
+selectors on top and never replaces the attribute. It replaces portal's
+`data-apply-playwright-mask`, the engine's old default selector, which is no
+longer masked unless a config lists it.
 
 `report.json`: `{ baseSha, sourcePr, sourceSha, pages: [{ file, status,
 diffPercent? }] }` — status `added` | `changed` | `removed`, `diffPercent`

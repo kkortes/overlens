@@ -61,6 +61,10 @@ const config: OverlensConfig = {
   // or a client-side fetch, so an app that paints a spinner first needs to say
   // when it's actually done — otherwise that spinner is what gets screenshot.
   // ready: (page) => page.waitForFunction(() => window.appReady === true),
+  // Content that changes on every render is covered with a solid box when
+  // its element carries data-overlens-mask (bare, empty or "true"). These
+  // CSS selectors are masked on top, for markup you can't annotate.
+  // mask: [".chat-widget"],
   // The crawl's budget, 15 minutes by default. Raise it for a big site: full
   // page shots of tall pages add up, and a 2-vCPU runner is no workstation —
   // nor are pressed states, a page load each. Drawers, menus and dialogs need
