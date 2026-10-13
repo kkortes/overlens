@@ -93,14 +93,18 @@ PR #143 added the report):
 report.json                                      overlens/pr-* branches only, at the root
 ```
 
-Pressed states come from elements marked `data-overlens-press="<state>"`:
-after a page's own shots each pass presses every one on screen, waits out
-animations and the page settling, and shoots the opened state; marks that
-state reveals are pressed next, chained with `~`. A valued press is shot once
-per pass across the whole crawl, filed under the first page that reached it.
-A bare attribute (or `"true"`, React's bare JSX data-* attribute) is named by
-page and nth — its place among the page's presses, `<page>~3`. Menus are
-plain presses: `data-overlens-reveal` was dropped before release. Each state
+Pressed states come from elements marked with a bare `data-overlens-press`
+(empty or `"true"`, React's bare JSX data-* attribute, count too; any other
+value isn't a press). After a page's own shots each pass presses every one on
+screen, waits out animations and the page settling, and names the state after
+what opened: the topmost new dialog/alertdialog/aria-modal/menu/listbox, by
+`aria-label`, `aria-labelledby` text or first heading; failing that the
+press's own label or text, and its nth among the page's presses as the last
+resort. Marks inside the state are pressed next, chained with `~`. A name is
+shot once per pass across the whole crawl, filed under the first page that
+reached it. An opened menu or listbox isn't shot — its items are pressed as if
+on the page. Valued presses and `data-overlens-reveal` were both dropped
+before release. Each state
 is its own entry in `report.json`, so the inspector gives it its own slide
 with no special handling — the slide label reads
 `customers / [id]~edit-drawer`. The install guide documents the attribute;

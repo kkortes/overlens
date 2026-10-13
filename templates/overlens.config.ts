@@ -68,9 +68,9 @@ const config: OverlensConfig = {
   // The crawl's budget, 15 minutes by default. Raise it for a big site: full
   // page shots of tall pages add up, and a 2-vCPU runner is no workstation —
   // nor are pressed states, a page load each. Drawers, menus and dialogs need
-  // no config: mark what opens them in your markup with
-  // data-overlens-press="<state>" and each opened state is shot as
-  // <page>~<state>.png.
+  // no config: mark what opens them in your markup with a bare
+  // data-overlens-press and each opened state is shot as <page>~<name>.png,
+  // named after the dialog's aria-label.
   // timeoutMinutes: 45,
 };
 
