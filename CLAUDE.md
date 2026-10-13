@@ -67,8 +67,9 @@ GitHub OAuth code, everything else runs in the browser.
 - **`ApeEgg/overlens-action`** (public repo, sibling checkout at
   `../overlens-action`) — the reusable workflow (`workflow_call`) plus the
   crawl engine, referenced from a ~20-line trigger workflow in each consumer
-  ([templates/overlens.yml](templates/overlens.yml), pinned `@v1` — move the
-  tag on engine changes). The workflow checks out its own repo via
+  ([templates/overlens.yml](templates/overlens.yml), pinned `@v3` — each tag
+  marks one engine commit, so cut a new tag on engine changes and bump the
+  pin). The workflow checks out its own repo via
   `job.workflow_repository`/`job.workflow_sha`, so a caller's pinned tag
   also pins the engine. Inputs: `environments` (regex a deployment's
   environment must match, default `Preview|Production`), `inspector` (report
@@ -87,9 +88,19 @@ Produced by each consumer repo's Overlens workflow (see `sesamyab/account2`,
 PR #143 added the report):
 
 ```
-<viewport>-<theme>/<page>.png   desktop|mobile × light|dark, slugified paths
-report.json                     overlens/pr-* branches only, at the root
+<viewport>-<theme>/<page>.png                    desktop|mobile × light|dark, slugified paths
+<viewport>-<theme>/<page>~<state>[~<nested>].png pressed states (engine v3+)
+report.json                                      overlens/pr-* branches only, at the root
 ```
+
+Pressed states come from elements marked `data-overlens-press="<state>"`:
+after a page's own shots each pass presses every one on screen, waits out
+animations and the page settling, and shoots the opened state; marks that
+state reveals are pressed next, chained with `~`. A bare attribute names the
+state by DOM position (`home~2.1.3`). Each state is its own entry in
+`report.json`, so the inspector gives it its own slide with no special
+handling — the slide label reads `customers / [id]~edit-drawer`. The install
+guide documents the attribute; the engine README holds the full rules.
 
 `report.json`: `{ baseSha, sourcePr, sourceSha, pages: [{ file, status,
 diffPercent? }] }` — status `added` | `changed` | `removed`, `diffPercent`

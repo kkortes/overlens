@@ -62,7 +62,11 @@ const config: OverlensConfig = {
   // when it's actually done — otherwise that spinner is what gets screenshot.
   // ready: (page) => page.waitForFunction(() => window.appReady === true),
   // The crawl's budget, 15 minutes by default. Raise it for a big site: full
-  // page shots of tall pages add up, and a 2-vCPU runner is no workstation.
+  // page shots of tall pages add up, and a 2-vCPU runner is no workstation —
+  // nor are pressed states, a page load each. Drawers, menus and dialogs need
+  // no config: mark what opens them in your markup with
+  // data-overlens-press="<state>" and each opened state is shot as
+  // <page>~<state>.png.
   // timeoutMinutes: 45,
 };
 
