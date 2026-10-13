@@ -1,0 +1,97 @@
+# @ape-egg/overlens
+
+Visual regression review, straight from GitHub, run from a workflow with `bunx`. Guide and inspector: [overlens.korte.kim](https://overlens.korte.kim).
+
+On every successful deployment it crawls the deploy, screenshots every reachable page across viewport/theme passes, diffs against the baseline, pushes `overlens/dev` and `overlens/pr-{n}` snapshot branches and maintains a summary in the source PR — all inspectable at `overlens.korte.kim/{owner}/{repo}/pull/{n}`.
+
+## Setup
+
+```sh
+bunx @ape-egg/overlens init      # writes the two files below
+git add -A && git commit -m "add overlens" && git push
+```
+
+- `overlens.config.ts`: the entry pages, the viewport/theme passes, how your app switches theme and the `targetBranch` PRs are compared against.
+- `.github/workflows/overlens.yml`: triggers, permissions and `bunx @ape-egg/overlens@1`:
+
+```yaml
+name: Overlens
+on:
+  deployment_status:
+  pull_request:
+    types: [closed]
+
+concurrency:
+  group: overlens-${{ github.event.deployment.ref || github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  overlens:
+    if: github.event_name == 'pull_request' || github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+      - run: bunx @ape-egg/overlens@1
+        env:
+          GH_TOKEN: ${{ github.token }}
+```
+
+The crawl runs in the Playwright container image matching the crawler's own exact-pinned Playwright, so the runner needs Docker (every GitHub-hosted Linux runner has it). Your repo installs nothing, and your `overlens.config` is imported straight from source, so it must stay free of npm dependencies (type-only imports are erased and fine).
+
+Land it on `targetBranch` first: until that branch has deployed once there is no `overlens/dev` to compare against, so a PR opened before then reports every page as new.
+
+## Environment
+
+All optional — the defaults cover Vercel.
+
+| variable | default | |
+| --- | --- | --- |
+| `ENVIRONMENTS` | `Preview\|Production` | regex a deployment's environment name must match |
+| `INSPECTOR` | `https://overlens.korte.kim` | origin the report links point to |
+
+The job's `runs-on` picks the runner.
+
+## Commands
+
+The workflow runs `overlens` with no argument; it acts on the event:
+
+- `deployment_status`: a successful deployment with a URL, whose environment matches `ENVIRONMENTS`, at a commit carrying an `overlens.config`, is crawled. A deploy of `targetBranch` becomes the baseline on `overlens/dev`; a deploy of a branch with an open PR lands on `overlens/pr-{n}` with a `report.json`, a draft PR into `overlens/dev` when pages changed (unless `createPR: false`), and a summary between `<!-- overlens:summary -->` markers in the source PR's description. A deploy that's no longer its branch's tip is skipped.
+- `pull_request` `closed`: closes the PR's draft snapshot PR and deletes `overlens/pr-{n}`.
+
+`overlens init` also runs by name.
+
+## Pressed states
+
+A drawer, menu or dialog is only on screen after a click. Mark the element that opens it with a bare `data-overlens-press` and the crawl shoots the opened state too — no config needed:
+
+```html
+<button data-overlens-press>Edit</button>
+```
+
+The attribute counts when it's bare, empty or `"true"` — React renders a bare JSX `<button data-overlens-press>` as `data-overlens-press="true"`. Any other value, `"false"` included, isn't a press.
+
+After a page's own passes, each pass (viewport and theme) presses every marked element on screen, waits until running animations finish and the page settles, and shoots whatever the press produced — a drawer, a menu, a modal, revealed content, anything. The crawl never looks at what opened. The state is named after the pressed element's own label (`aria-label`, else its text) and shot as `<viewport>-<theme>/<page>~<name>.png`. Marked elements the pressed state shows are pressed next and shot as `<page>~<name>~<nested>.png`. When two presses on a page share a name, the later one gets its place among the page's presses appended, `<page>~<name>-<n>.png`.
+
+- **One shot per group** — marked elements with the same tag-and-class ancestry are a group (the rows of a list). A state is identified by its page and the group of the press that produced it, so only the first of a group is pressed and shot; ten rows opening a drawer titled with their own record give one snapshot, named after the first row. The flip side: siblings that share ancestry but open different things (tabs, a toolbar of plain buttons) are one group too, so give each a class of its own when every one should be shot.
+- **Per page** — the same drawer reached from several pages is shot under each of them.
+- **Pressed once** — each marked element is recorded by its place among the page's presses, so nothing is pressed twice within a page's crawl and a button still visible behind its own drawer isn't explored again.
+- **No leaks** — every state starts from a fresh load of the page and replays its press chain. State the press persists (localStorage, the server) does carry over, so only mark presses that open things.
+- **Time** — each press is a full page load, counted against `timeoutMinutes`; the rest of a group is never pressed, so it costs nothing.
+
+## Masks
+
+Content that changes on every render — a clock, an avatar, a live counter — is covered with a solid box in every screenshot when its element carries `data-overlens-mask`:
+
+```html
+<time data-overlens-mask>12:04</time>
+```
+
+The attribute counts when it's bare, empty or `"true"` — React renders a bare JSX `<time data-overlens-mask>` as `data-overlens-mask="true"`. Any other value, `"false"` included, leaves the element unmasked. The config's `mask` adds CSS selectors on top; it never replaces the attribute.

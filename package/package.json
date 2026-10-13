@@ -1,0 +1,28 @@
+{
+  "name": "@ape-egg/overlens",
+  "version": "1.0.0",
+  "description": "Visual regression review straight from GitHub: crawls every deploy, diffs the screenshots and reports in the PR — run from a GitHub workflow.",
+  "type": "module",
+  "bin": {
+    "overlens": "bin/overlens.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "crawler",
+    "templates"
+  ],
+  "homepage": "https://overlens.korte.kim",
+  "keywords": [
+    "github-actions",
+    "visual-regression",
+    "playwright",
+    "screenshots"
+  ],
+  "engines": {
+    "bun": ">=1.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

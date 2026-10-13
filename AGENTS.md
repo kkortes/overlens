@@ -4,14 +4,19 @@ Stateless inspector for Overlens visual-regression snapshots. GitHub is the
 database: `/{owner}/{repo}/pull/{n}` reads the tips of that repo's
 `overlens/pr-{n}` (head) and `overlens/dev` (base) branches and renders the
 comparison. No accounts, no server state — one Vercel function exchanges the
-GitHub OAuth code, everything else runs in the browser.
+GitHub OAuth code, everything else runs in the browser. The npm package
+`@ape-egg/overlens` in [package/](package/) is what writes those branches.
 
 ## Commands
 
 - `bun dev` — `vibe compile --watch` + Bun static server with SPA fallback
   ([dev.js](dev.js)), wrapped by `../dev.sh` (Caddy proxy at
   `https://overlens.localhost`, honors `$PORT`)
-- `bun run compile` — one-off build to `compiled/` (what Vercel runs)
+- `bun run compile` — one-off build to `compiled/` (what Vercel runs, then
+  it copies `package/templates` to `compiled/templates`)
+- `bun publish:overlens` — `npm pack --dry-run`, then
+  [scripts/publish.sh](scripts/publish.sh) asks for a version and publishes
+  `package/`. Only on the developer's word.
 
 ## Architecture
 
@@ -27,10 +32,10 @@ GitHub OAuth code, everything else runs in the browser.
   the pr ref with a visible repo = `no-data`; invisible repo or 401/403 =
   `gate`; missing report.json = `no-report`; empty `pages` = `clean`.
 - **[js/diff.js](js/diff.js)** — the Difference mode: canvas pixel diff over
-  the union of both images (~5% per-channel fuzz, like the workflow), red over
+  the union of both images (~5% per-channel fuzz, like the package), red over
   a dimmed base, computed lazily and cached per (page, variant). Area only one
   image covers (height deltas) renders dimmed, never red — matching the
-  workflow's diffPercent, which only counts the shared area.
+  package's diffPercent, which only counts the shared area.
 - **[components/Inspector.html](components/Inspector.html)** — stylecheat
   fullpage vertical carousel, one slide per page. One mode group: Difference
   (default), Split (clip-path + drag handle, base left / PR right), Onion
@@ -64,23 +69,44 @@ GitHub OAuth code, everything else runs in the browser.
   the rest. Those rules are scoped to `overlens-inspector`; the landing
   reuses the same element names with its own fixed header.
 - **css/stylecheat.css** — vendored hybrid build (`<body stylecheat dark>`).
-- **`ApeEgg/overlens-action`** (public repo, sibling checkout at
-  `../overlens-action`) — the reusable workflow (`workflow_call`) plus the
-  crawl engine, referenced from a ~20-line trigger workflow in each consumer
-  ([templates/overlens.yml](templates/overlens.yml), pinned `@v4` — each tag
-  marks one engine commit, so cut a new tag on engine changes and bump the
-  pin). The workflow checks out its own repo via
-  `job.workflow_repository`/`job.workflow_sha`, so a caller's pinned tag
-  also pins the engine. Inputs: `environments` (regex a deployment's
-  environment must match, default `Preview|Production`), `inspector` (report
-  link origin) and `runner` (label, default `ubuntu-latest`). The crawl runs
-  in the pinned Playwright container with the crawler's own exact-pinned
-  `@playwright/test` — the container tag and the pin move together,
-  consumers install nothing. The consumer's `overlens.config` is imported by
-  bun with no install, so it must stay dependency-free (type-only imports
-  are erased and fine). It has to be a public repo: reusable workflows in a
-  private repo aren't callable across owners, and fail as a jobless
-  "workflow file issue" run.
+- **[js/guide.js](js/guide.js)** highlights every `<template codie>`; one
+  with `data-src` loads that file from `/templates/` — the package's own
+  templates ([dev.js](dev.js) serves them from `package/templates`), so the
+  guide shows exactly what `overlens init` writes.
+
+## Package
+
+`@ape-egg/overlens` runs as `bunx @ape-egg/overlens@1` from a ~30-line
+workflow in each consumer ([templates/overlens.yml](package/templates/overlens.yml):
+checkout with full history, setup-bun, the bunx step with `GH_TOKEN`).
+[bin/overlens.js](package/bin/overlens.js) dispatches on `GITHUB_EVENT_NAME`
+(or `init` by name). Inputs are env vars: `ENVIRONMENTS` (regex a
+deployment's environment must match, default `Preview|Production`) and
+`INSPECTOR` (report link origin); the job's `runs-on` picks the runner.
+
+- [snapshot.js](package/src/snapshot.js) — `deployment_status`: a successful
+  deploy with a URL, a matching environment and an `overlens.config` at that
+  commit is crawled; then the branch resolves to `dev` (`targetBranch`),
+  `pr-N` (an open PR) or nothing (superseded deploy, no PR).
+- [crawl.js](package/src/crawl.js) — copies [crawler/](package/crawler/) to
+  `.overlens/crawler` in the checkout, so the spec's `../../overlens.config`
+  import resolves, and runs it with `docker run` in
+  `mcr.microsoft.com/playwright:v<pin>-noble`, the tag read from the
+  crawler's exact `@playwright/test` pin — the image and the pin move
+  together, consumers install nothing. Only `OVERLENS`, `CI` and
+  `PLAYWRIGHT_BASE_URL` reach the container, not the token. The consumer's
+  `overlens.config` is imported by bun and by Playwright with no install, so
+  it must stay dependency-free (type-only imports are erased and fine).
+- [publish.js](package/src/publish.js) — clones `overlens/dev`, lays the
+  output over it, diffs each changed PNG with ImageMagick (`compare -fuzz 5%
+  -metric AE` over the shared area, ≤32 pixels is noise), writes
+  `report.json` on PR branches and force-pushes `overlens/<slug>`.
+- [report.js](package/src/report.js) — the draft PR into `overlens/dev`
+  (file list and mermaid sitemap) and the source PR's summary between
+  `<!-- overlens:summary -->` markers, headed "This PR was visually scanned
+  through Overlens" linked to the site.
+- [cleanup.js](package/src/cleanup.js) — `pull_request` `closed`: closes the
+  draft PR and deletes `overlens/pr-N`.
 
 ## Data contract
 
@@ -97,18 +123,14 @@ Pressed states come from elements marked with a bare `data-overlens-press`
 (empty or `"true"`, React's bare JSX data-* attribute, count too; any other
 value isn't a press). After a page's own shots each pass presses every one on
 screen, waits out animations and the page settling, and names the state after
-what opened: the topmost new dialog/alertdialog/aria-modal/menu/listbox, by
-`aria-label`, `aria-labelledby` text or first heading; failing that the
-press's own label or text, and its nth among the page's presses as the last
-resort. Marks inside the state are pressed next, chained with `~`. A name is
-shot once per pass across the whole crawl, filed under the first page that
-reached it. An opened menu or listbox isn't shot — its items are pressed as if
-on the page. Valued presses and `data-overlens-reveal` were both dropped
-before release. Each state
-is its own entry in `report.json`, so the inspector gives it its own slide
-with no special handling — the slide label reads
-`customers / [id]~edit-drawer`. The install guide documents the attribute;
-the engine README holds the full rules.
+the press's own `aria-label` or text — the crawl never looks at what opened;
+a name repeated on a page gets the press's place appended. Marks inside the
+state are pressed next, chained with `~`. Presses sharing tag-and-class
+ancestry are one group, and only the first of a group is pressed; states are
+per page. Each state is its own entry in `report.json`, so the inspector
+gives it its own slide with no special handling — the slide label reads
+`customers / [id]~edit`. The install guide documents the attribute; the
+package README holds the full rules.
 
 Masks come from elements carrying `data-overlens-mask`, bare, empty or
 `"true"` — any other value, `"false"` included, is unmasked. Every shot,

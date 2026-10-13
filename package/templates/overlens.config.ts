@@ -1,4 +1,4 @@
-// The workflow imports this file straight from source, with no install:
+// Overlens imports this file straight from source, with no install:
 // relative imports to your own files are fine, npm dependencies aren't.
 // The Playwright type below is erased at runtime — add @playwright/test as a
 // dev dependency for the editor if you don't have it; the crawl ships its own.
@@ -28,7 +28,7 @@ export type OverlensConfig = {
 
 const config: OverlensConfig = {
   // The entry pages the crawl starts from — every root-relative link is
-  // followed. Paths resolve against the deploy URL (the workflow sets
+  // followed. Paths resolve against the deploy URL (Overlens sets
   // PLAYWRIGHT_BASE_URL); absolute URLs work too, e.g. a vendor subdomain.
   // pagesIncluded: ["/"],
   // Subtrees the crawl must not enter.
@@ -70,7 +70,7 @@ const config: OverlensConfig = {
   // nor are pressed states, a page load each. Drawers, menus and dialogs need
   // no config: mark what opens them in your markup with a bare
   // data-overlens-press and each opened state is shot as <page>~<name>.png,
-  // named after the dialog's aria-label.
+  // named after the pressed element's aria-label or text.
   // timeoutMinutes: 45,
 };
 

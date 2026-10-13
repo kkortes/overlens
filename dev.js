@@ -24,9 +24,10 @@ Bun.serve({
     if (await file.exists()) return new Response(file);
 
     // The compiler mirrors only web assets — the deploy's build command
-    // copies /templates/ into the output, and dev serves it from source.
+    // copies the npm package's templates into the output, and dev serves
+    // them from source, so the guide shows exactly what `overlens init` writes.
     if (pathname.startsWith('/templates/')) {
-      const raw = Bun.file(`.${decodeURIComponent(pathname)}`);
+      const raw = Bun.file(`package${decodeURIComponent(pathname)}`);
       if (await raw.exists()) return new Response(raw);
     }
 

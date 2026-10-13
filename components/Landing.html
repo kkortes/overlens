@@ -84,16 +84,20 @@
         protection turns every page into the same auth wall.
       </p>
       <p>
-        The crawl engine, the diffing and the PR reporting live in a reusable
-        workflow versioned with this inspector — it brings its own
+        The crawl engine, the diffing and the PR reporting live in the npm
+        package <code>@ape-egg/overlens</code>, versioned with this inspector
+        and run with <code>bunx</code> from your workflow — it brings its own
         <a href="https://playwright.dev" target="_blank" rel="noopener" primary>Playwright</a>
-        (which we have to thank for making all of this possible), pinned to a
-        matching container image so every snapshot rasterises text on one
-        font stack — render a baseline on one runner image and a PR on
-        another and every glyph shifts a subpixel, which reads as every page
-        having changed. Your repo installs nothing. Two files make the
-        integration:
+        (which we have to thank for making all of this possible) and crawls
+        in the matching Playwright container image, so every snapshot
+        rasterises text on one font stack — render a baseline on one runner
+        image and a PR on another and every glyph shifts a subpixel, which
+        reads as every page having changed. Your repo installs nothing. Two
+        files make the integration, and one command writes both:
       </p>
+      <template codie highlight-js dark>
+        bunx @ape-egg/overlens init
+      </template>
 
       <guide-step>
         <h3><step-no>1</step-no> <code>overlens.config.ts</code> — repo root</h3>
@@ -112,10 +116,13 @@
       <guide-step>
         <h3><step-no>2</step-no> <code>.github/workflows/overlens.yml</code></h3>
         <p>
-          Just the triggers and permissions — the reusable workflow it
-          references crawls every successful deploy, diffs the output against
-          the baseline, pushes the snapshot branches and maintains a summary
-          in the source PR's description.
+          The triggers, the permissions and
+          <code>bunx @ape-egg/overlens@1</code>, which crawls every successful
+          deploy, diffs the output against the baseline, pushes the snapshot
+          branches and maintains a summary in the source PR's description.
+          Pinning <code>@1</code> takes every release short of a breaking
+          one. Hosts other than Vercel name their environments differently:
+          set <code>ENVIRONMENTS</code> to a regex that matches them.
         </p>
         <template codie highlight-js dark data-src="overlens.yml"></template>
       </guide-step>
@@ -156,26 +163,25 @@
         <p>
           The attribute counts bare, empty or <code>"true"</code> — what React
           renders for a bare JSX <code>data-overlens-press</code>. Any other
-          value, <code>"false"</code> included, isn't a press. The state is
-          named after what the press opened: the topmost
-          <code>dialog[open]</code>, <code>[role=dialog]</code>,
-          <code>[role=alertdialog]</code>, <code>[aria-modal=true]</code>,
-          <code>[role=menu]</code> or <code>[role=listbox]</code> that wasn't on
-          top before, by its <code>aria-label</code>, else its
-          <code>aria-labelledby</code> text, else its first heading — the
-          example above shoots <code>&lt;page&gt;~edit-customer.png</code>. When
-          nothing new opened, the press's own <code>aria-label</code> or text
-          names it, and its place among the page's presses is the last resort.
+          value, <code>"false"</code> included, isn't a press. The crawl never
+          looks at what opened: the state is named after the pressed element's
+          own <code>aria-label</code>, else its text — the example above shoots
+          <code>&lt;page&gt;~edit.png</code> and
+          <code>&lt;page&gt;~edit~delete.png</code>. When two presses on a page
+          share a name, the later one gets its place among the page's presses
+          appended, <code>&lt;page&gt;~&lt;name&gt;-&lt;n&gt;.png</code>.
         </p>
         <p>
-          A name is shot once per pass across the whole crawl: ten rows opening
-          the same drawer, or one drawer opened from several pages, give one
-          snapshot, filed under the first page that reached it. A dialog titled
-          with data — a customer, an episode — is a new state for every value,
-          so give it a fixed <code>aria-label</code>. A menu or listbox a press
-          opens isn't shot: its marked items are pressed and named as if they
-          sat on the page. No element is pressed twice within a page's crawl,
-          so a button still visible behind its own drawer isn't opened again.
+          Marked elements with the same tag-and-class ancestry are a group —
+          the rows of a list. Only the first of a group is pressed and shot, so
+          ten rows opening a drawer titled with their own record give one
+          snapshot, named after the first row. Siblings that share ancestry but
+          open different things, like tabs or a toolbar of plain buttons, are
+          one group too: give each a class of its own when every one should be
+          shot. States are per page — the same drawer reached from several
+          pages is shot under each of them. No element is pressed twice within
+          a page's crawl, so a button still visible behind its own drawer isn't
+          opened again.
         </p>
         <p>
           Only marks on screen count: not hidden, not <code>inert</code>, not
@@ -183,8 +189,8 @@
           fresh load and replays its clicks, but anything a press saves outside
           the page — localStorage, the server — carries into the next state, so
           only mark presses that open things. Each press is a full page load
-          against <code>timeoutMinutes</code>, even when its state was already
-          shot.
+          against <code>timeoutMinutes</code>; the rest of a group is never
+          pressed, so it costs nothing.
         </p>
       </guide-step>
 
