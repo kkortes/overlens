@@ -19,6 +19,7 @@ on:
 
 jobs:
   overlens:
+    name: Crawl and compare
     runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: oven-sh/setup-bun@v2
