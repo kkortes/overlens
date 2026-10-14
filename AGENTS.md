@@ -94,11 +94,12 @@ GitHub OAuth code, everything else runs in the browser. The npm package
 `@ape-egg/overlens` runs as `bunx @ape-egg/overlens@1` from the shared
 workflow [.github/workflows/run.yml](.github/workflows/run.yml) (`on:
 workflow_call`, tagged `v1` — move the tag when it changes, which is why this
-repo is public). Each consumer's 5-line file
+repo is public). Each consumer's 6-line file
 ([templates/overlens.yml](package/templates/overlens.yml)) keeps only
-`on: deployment_status`, the token's two write permissions (a called workflow
-can't widen the caller's token) and the `uses:` job; run.yml does setup-bun
-and the bunx step with `GH_TOKEN: ${{ github.token }}`. Everything else lives
+`name: Overlens`, `on: deployment_status`, the token's two write permissions
+(a called workflow can't widen the caller's token) and the `uses:` job with id
+`Overlens`, so the check reads `Overlens / Crawl and compare` (run.yml's job
+name); run.yml does setup-bun and the bunx step with `GH_TOKEN: ${{ github.token }}`. Everything else lives
 in the package, so keep both files that small: no checkout, no concurrency, no
 job `if`, no `pull_request` trigger. [bin/overlens.js](package/bin/overlens.js)
 runs on `deployment_status` (or `init` by name). The consumer passes optional

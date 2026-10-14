@@ -15,10 +15,11 @@ git add -A && git commit -m "add overlens" && git push
 - `.github/workflows/overlens.yml`: the trigger, the token's permissions and a call to the shared workflow, which runs `bunx @ape-egg/overlens@1` with the repo's own `GH_TOKEN`:
 
 ```yaml
+name: Overlens
 on: deployment_status
 permissions: { contents: write, pull-requests: write }
 jobs:
-  overlens:
+  Overlens:
     uses: kkortes/overlens/.github/workflows/run.yml@v1
 ```
 
