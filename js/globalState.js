@@ -1,5 +1,5 @@
 import config from '/js/config.js';
-import { loadVariant, ensureDiffs, signIn, signOut } from '/js/github.js';
+import { loadVariant, ensureDiffs, signIn, signOut, signedIn } from '/js/github.js';
 
 export default {
   modal: '',
@@ -27,7 +27,7 @@ export default {
     themes: [],
   },
   auth: {
-    authed: !!localStorage.getItem('overlens-token'),
+    authed: signedIn(),
     configured: !!config.clientId,
     appSlug: config.appSlug,
     error: '',

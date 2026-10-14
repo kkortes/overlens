@@ -27,8 +27,12 @@ GitHub OAuth code, everything else runs in the browser. The npm package
 - **[js/github.js](js/github.js)** — the data layer. Branch tips resolve once
   per load, then everything is fetched by immutable commit sha and cached in
   memory. Tokenless: `raw.githubusercontent.com` (public repos). With a token
-  (`localStorage.overlens-token`): the Git Blobs API — base64 JSON, up to
-  100MB, because the Contents API caps files at 1MB. Status mapping: 404 on
+  (`localStorage.overlens-session`): the Git Blobs API — base64 JSON, up to
+  100MB, because the Contents API caps files at 1MB. The GitHub App's user
+  tokens expire after 8 hours: the session keeps the refresh token and
+  `loadInspector` swaps an expired token through
+  [api/exchange.js](api/exchange.js) before its first API call — otherwise
+  the 401 lands a signed-in visitor on the gate. Status mapping: 404 on
   the pr ref with a visible repo = `no-data`; invisible repo or 401/403 =
   `gate`; missing report.json = `no-report`; empty `pages` = `clean`.
 - **[js/diff.js](js/diff.js)** — the Difference mode: canvas pixel diff over

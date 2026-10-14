@@ -10,7 +10,39 @@ const store = { trees: new Map(), blobs: new Map(), urls: new Map() };
 let seq = 0;
 let diffChain = Promise.resolve();
 
-const token = () => localStorage.getItem('overlens-token') || '';
+// { token, refresh, expires } — GitHub App user tokens expire after 8 hours
+// (expires_in), the refresh token mints the next one. A non-expiring token
+// carries neither.
+const session = () => JSON.parse(localStorage.getItem('overlens-session')) ?? {};
+const token = () => session().token || '';
+export const signedIn = () => !!token();
+
+const exchange = async (grant) => {
+  const res = await fetch('/api/exchange', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(grant),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!data.access_token) throw new Error(data.error || `token exchange failed (${res.status})`);
+  localStorage.setItem(
+    'overlens-session',
+    JSON.stringify({
+      token: data.access_token,
+      refresh: data.refresh_token,
+      expires: data.expires_in && Date.now() + data.expires_in * 1000,
+    }),
+  );
+};
+
+// An expired token answers 401, which reads as "no access" — so swap it
+// before the first API call rather than after GitHub rejects it. A refresh
+// token GitHub no longer honours (6 months, or revoked) ends the session.
+const renew = () => {
+  const { refresh, expires } = session();
+  if (!expires || expires - 60_000 > Date.now()) return;
+  return exchange({ refresh_token: refresh }).catch(() => signOut(false));
+};
 
 const gh = async (path) => {
   const res = await fetch(`${API}${path}`, {
@@ -193,6 +225,8 @@ export const loadInspector = async ({ owner, repo, n }) => {
   });
   document.title = `${owner}/${repo} #${n} · Overlens`;
 
+  await renew();
+  if (run !== seq) return;
   const [head, base] = await Promise.all([
     tryRef(owner, repo, `overlens/pr-${n}`),
     tryRef(owner, repo, 'overlens/dev'),
@@ -252,28 +286,23 @@ export const signIn = () => {
 };
 
 export const signOut = (reload = true) => {
-  localStorage.removeItem('overlens-token');
+  localStorage.removeItem('overlens-session');
+  $.auth.authed = false;
   if (reload) location.reload();
 };
 
 // The GitHub App redirects to the site root with ?code — the landing page
-// exchanges it, stores the token and returns to the inspector URL in ?state.
+// exchanges it, stores the session and returns to the inspector URL in ?state.
 export const handleCallback = async () => {
   const q = new URLSearchParams(location.search);
   const code = q.get('code');
   if (!code) return;
-  const res = await fetch('/api/exchange', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (data.access_token) {
-    localStorage.setItem('overlens-token', data.access_token);
+  try {
+    await exchange({ code });
     location.replace(q.get('state') || '/');
-  } else {
+  } catch (e) {
     history.replaceState(null, '', '/');
-    $.auth.error = data.error || `token exchange failed (${res.status})`;
+    $.auth.error = e.message;
   }
 };
 
