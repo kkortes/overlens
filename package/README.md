@@ -12,18 +12,14 @@ git add -A && git commit -m "add overlens" && git push
 ```
 
 - `overlens.config.ts`: the entry pages, the viewport/theme passes, how your app switches theme and the `targetBranch` PRs are compared against.
-- `.github/workflows/overlens.yml`: the trigger, the token's permissions and `bunx @ape-egg/overlens@1`:
+- `.github/workflows/overlens.yml`: the trigger, the token's permissions and a call to the shared workflow, which runs `bunx @ape-egg/overlens@1` with the repo's own `GH_TOKEN`:
 
 ```yaml
 on: deployment_status
 permissions: { contents: write, pull-requests: write }
 jobs:
   overlens:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: oven-sh/setup-bun@v2
-      - run: bunx @ape-egg/overlens@1
-        env: { GH_TOKEN: "${{ github.token }}" }
+    uses: kkortes/overlens/.github/workflows/run.yml@v1
 ```
 
 Every other line a workflow usually carries is the package's job. It checks out the deployed commit itself, skips deployments that didn't succeed, skips a deploy that's no longer its branch's tip (before the crawl and again before pushing), and retires the snapshot branch and draft PR of every closed PR on the next successful deploy.
@@ -32,16 +28,17 @@ The crawl runs in the Playwright container image matching the crawler's own exac
 
 Land it on `targetBranch` first: until that branch has deployed once there is no `overlens/dev` to compare against, so a PR opened before then reports every page as new.
 
-## Environment
+## Inputs
 
-All optional — the defaults cover Vercel. Set them on the bunx step, e.g. `env: { GH_TOKEN: "${{ github.token }}", ENVIRONMENTS: "Staging" }`.
+All optional — the defaults cover Vercel. Pass them under `with:` on the job, e.g. `with: { environments: Staging, runs-on: blacksmith-4vcpu-ubuntu-2404 }`.
 
-| variable | default | |
+| input | default | |
 | --- | --- | --- |
-| `ENVIRONMENTS` | `Preview\|Production` | regex a deployment's environment name must match |
-| `INSPECTOR` | `https://overlens.korte.kim` | origin the report links point to |
+| `environments` | `Preview\|Production` | regex a deployment's environment name must match |
+| `inspector` | `https://overlens.korte.kim` | origin the report links point to |
+| `runs-on` | `ubuntu-latest` | runner label the crawl runs on |
 
-The job's `runs-on` picks the runner.
+The shared workflow hands them to the package as the `ENVIRONMENTS` and `INSPECTOR` env vars.
 
 ## Commands
 

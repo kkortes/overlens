@@ -76,16 +76,21 @@ GitHub OAuth code, everything else runs in the browser. The npm package
 
 ## Package
 
-`@ape-egg/overlens` runs as `bunx @ape-egg/overlens@1` from a 9-line
-workflow in each consumer ([templates/overlens.yml](package/templates/overlens.yml)):
-`on: deployment_status`, the token's two write permissions, `runs-on`,
-setup-bun and the bunx step with `GH_TOKEN` — GitHub hands the token to a
-step only when the workflow passes it. Everything else lives in the package,
-so keep the file that small: no checkout, no concurrency, no job `if`, no
-`pull_request` trigger. [bin/overlens.js](package/bin/overlens.js) runs on
-`deployment_status` (or `init` by name). Inputs are env vars: `ENVIRONMENTS` (regex a
-deployment's environment must match, default `Preview|Production`) and
-`INSPECTOR` (report link origin); the job's `runs-on` picks the runner.
+`@ape-egg/overlens` runs as `bunx @ape-egg/overlens@1` from the shared
+workflow [.github/workflows/run.yml](.github/workflows/run.yml) (`on:
+workflow_call`, tagged `v1` — move the tag when it changes, which is why this
+repo is public). Each consumer's 5-line file
+([templates/overlens.yml](package/templates/overlens.yml)) keeps only
+`on: deployment_status`, the token's two write permissions (a called workflow
+can't widen the caller's token) and the `uses:` job; run.yml does setup-bun
+and the bunx step with `GH_TOKEN: ${{ github.token }}`. Everything else lives
+in the package, so keep both files that small: no checkout, no concurrency, no
+job `if`, no `pull_request` trigger. [bin/overlens.js](package/bin/overlens.js)
+runs on `deployment_status` (or `init` by name). The consumer passes optional
+`with:` inputs — `environments` (regex a deployment's environment must match,
+default `Preview|Production`), `inspector` (report link origin) and `runs-on`
+(runner label, default `ubuntu-latest`) — which run.yml hands the package as
+`ENVIRONMENTS` and `INSPECTOR`.
 
 - [snapshot.js](package/src/snapshot.js) — a successful deploy with a URL
   and a matching environment is fetched (`git fetch --depth 1` of the

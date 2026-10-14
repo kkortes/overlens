@@ -2,8 +2,4 @@ on: deployment_status
 permissions: { contents: write, pull-requests: write }
 jobs:
   overlens:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: oven-sh/setup-bun@v2
-      - run: bunx @ape-egg/overlens@1
-        env: { GH_TOKEN: "${{ github.token }}" }
+    uses: kkortes/overlens/.github/workflows/run.yml@v1

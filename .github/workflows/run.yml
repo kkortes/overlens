@@ -1,0 +1,29 @@
+name: Overlens
+
+# Called from a repo's own .github/workflows/overlens.yml, which keeps the
+# trigger and the token's permissions: a called workflow can't widen the
+# caller's token. Every input is optional, the defaults cover Vercel.
+on:
+  workflow_call:
+    inputs:
+      environments:
+        description: Regex a deployment's environment name must match
+        type: string
+      inspector:
+        description: Origin the report links point to
+        type: string
+      runs-on:
+        description: Runner label the crawl runs on (needs Docker)
+        type: string
+        default: ubuntu-latest
+
+jobs:
+  overlens:
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - uses: oven-sh/setup-bun@v2
+      - run: bunx @ape-egg/overlens@1
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ENVIRONMENTS: ${{ inputs.environments }}
+          INSPECTOR: ${{ inputs.inspector }}
