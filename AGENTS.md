@@ -15,8 +15,19 @@ GitHub OAuth code, everything else runs in the browser. The npm package
 - `bun run compile` — one-off build to `compiled/` (what Vercel runs, then
   it copies `package/templates` to `compiled/templates`)
 - `bun publish:overlens` — `npm pack --dry-run`, then
-  [scripts/publish.sh](scripts/publish.sh) asks for a version and publishes
-  `package/`. Only on the developer's word.
+  [scripts/publish.sh](scripts/publish.sh) asks for a version (enter keeps
+  the one the branch bumped to) and publishes `package/`. The developer's to
+  run, never an agent's.
+
+## Contributing and versioning
+
+- Every branch made for overlens includes a version bump. It is a patch bump
+  (`1.0.0` → `1.0.1`) unless the developer names a minor or a major, and then
+  it is that one.
+- The version lives in `package/package.json`. The root `package.json` is the
+  private site and keeps its own.
+- Publishing is done by hand by the developer once the branch is merged to
+  `main`. An agent never publishes.
 
 ## Architecture
 
@@ -83,10 +94,11 @@ GitHub OAuth code, everything else runs in the browser. The npm package
 `@ape-egg/overlens` runs as `bunx @ape-egg/overlens@1` from the shared
 workflow [.github/workflows/run.yml](.github/workflows/run.yml) (`on:
 workflow_call`, tagged `v1` — move the tag when it changes, which is why this
-repo is public). Each consumer's 6-line file
+repo is public). Each consumer's 8-line file
 ([templates/overlens.yml](package/templates/overlens.yml)) keeps only
-`name: Overlens`, `on: deployment_status`, the token's two write permissions
-(a called workflow can't widen the caller's token) and the `uses:` job with id
+`name: Overlens` (without it the Actions list shows the file path: run.yml's
+own name never stands in), `on: deployment_status`, the token's two write
+permissions (a called workflow can't widen the caller's token) and the `uses:` job with id
 `Overlens`, so the check reads `Overlens / Crawl and compare` (run.yml's job
 name); run.yml does setup-bun and the bunx step with `GH_TOKEN: ${{ github.token }}`. Everything else lives
 in the package, so keep both files that small: no checkout, no concurrency, no
@@ -95,7 +107,8 @@ runs on `deployment_status` (or `init` by name). The consumer passes optional
 `with:` inputs — `environments` (regex a deployment's environment must match,
 default `Preview|Production`), `inspector` (report link origin) and `runs-on`
 (runner label, default `ubuntu-26.04`) — which run.yml hands the package as
-`ENVIRONMENTS` and `INSPECTOR`.
+`ENVIRONMENTS` and `INSPECTOR`. Every example writes `permissions:` and `with:`
+as expanded blocks, never inline braces.
 
 - [snapshot.js](package/src/snapshot.js) — a successful deploy with a URL
   and a matching environment is fetched (`git fetch --depth 1` of the

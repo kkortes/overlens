@@ -17,7 +17,9 @@ git add -A && git commit -m "add overlens" && git push
 ```yaml
 name: Overlens
 on: deployment_status
-permissions: { contents: write, pull-requests: write }
+permissions:
+  contents: write
+  pull-requests: write
 jobs:
   Overlens:
     uses: kkortes/overlens/.github/workflows/run.yml@v1
@@ -31,7 +33,16 @@ Land it on `targetBranch` first: until that branch has deployed once there is no
 
 ## Inputs
 
-All optional — the defaults cover Vercel. Pass them under `with:` on the job, e.g. `with: { environments: Staging, runs-on: blacksmith-4vcpu-ubuntu-2404 }`.
+All optional — the defaults cover Vercel. Pass them under `with:` on the job:
+
+```yaml
+jobs:
+  Overlens:
+    uses: kkortes/overlens/.github/workflows/run.yml@v1
+    with:
+      environments: ^Preview$
+      runs-on: blacksmith-4vcpu-ubuntu-2404
+```
 
 | input | default | |
 | --- | --- | --- |
