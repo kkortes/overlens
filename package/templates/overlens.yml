@@ -1,6 +1,8 @@
 name: Overlens
 on: deployment_status
-permissions: { contents: write, pull-requests: write }
+permissions:
+  contents: write
+  pull-requests: write
 jobs:
   Overlens:
     uses: kkortes/overlens/.github/workflows/run.yml@v1
