@@ -36,7 +36,7 @@ All optional — the defaults cover Vercel. Pass them under `with:` on the job, 
 | --- | --- | --- |
 | `environments` | `Preview\|Production` | regex a deployment's environment name must match |
 | `inspector` | `https://overlens.korte.kim` | origin the report links point to |
-| `runs-on` | `ubuntu-latest` | runner label the crawl runs on |
+| `runs-on` | `ubuntu-26.04` | runner label the crawl runs on |
 
 The shared workflow hands them to the package as the `ENVIRONMENTS` and `INSPECTOR` env vars.
 

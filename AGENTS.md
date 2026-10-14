@@ -89,7 +89,7 @@ job `if`, no `pull_request` trigger. [bin/overlens.js](package/bin/overlens.js)
 runs on `deployment_status` (or `init` by name). The consumer passes optional
 `with:` inputs — `environments` (regex a deployment's environment must match,
 default `Preview|Production`), `inspector` (report link origin) and `runs-on`
-(runner label, default `ubuntu-latest`) — which run.yml hands the package as
+(runner label, default `ubuntu-26.04`) — which run.yml hands the package as
 `ENVIRONMENTS` and `INSPECTOR`.
 
 - [snapshot.js](package/src/snapshot.js) — a successful deploy with a URL
