@@ -87,7 +87,7 @@ repo is public). Each consumer's 6-line file
 ([templates/overlens.yml](package/templates/overlens.yml)) keeps only
 `name: Overlens`, `on: deployment_status`, the token's two write permissions
 (a called workflow can't widen the caller's token) and the `uses:` job with id
-`Overlens`, so the check reads `Overlens / Quality control` (run.yml's job
+`Overlens`, so the check reads `Overlens / Crawl and compare` (run.yml's job
 name); run.yml does setup-bun and the bunx step with `GH_TOKEN: ${{ github.token }}`. Everything else lives
 in the package, so keep both files that small: no checkout, no concurrency, no
 job `if`, no `pull_request` trigger. [bin/overlens.js](package/bin/overlens.js)
