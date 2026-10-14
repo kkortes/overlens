@@ -10,11 +10,6 @@
         @[inspector.pages.length] page@[inspector.pages.length === 1 ? '' : 's'] ·
         @[inspector.headSha.slice(0, 7)] vs @[inspector.baseSha.slice(0, 7)]
       </meta-detail>
-      <!-- if inspector.drift -->
-      <badge bg-orange text-orange title="overlens/dev has moved since this report was generated — the base you see is today's tip, not the one the percentages were computed against. Re-run Overlens on the PR to refresh.">
-        base drift
-      </badge>
-      <!-- /if -->
     </inspector-meta>
     <!-- /if -->
   </top-left>
@@ -114,8 +109,8 @@
     <icon checkmark lg></icon>
     <h2>No visual changes</h2>
     <p>
-      The latest run of PR #@[inspector.pr] matches
-      <code>overlens/dev</code> pixel for pixel.
+      The latest run of PR #@[inspector.pr] matches its
+      <code>overlens/dev</code> baseline pixel for pixel.
     </p>
   </inspector-state>
   <!-- /if -->

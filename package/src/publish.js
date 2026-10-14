@@ -2,7 +2,7 @@ import { $ } from 'bun';
 import { cpSync, existsSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
 
-import { lines, remote, sha } from './github.js';
+import { lines, remote, repo, sha, short } from './github.js';
 
 // diffPercent counts mismatches within the area both images share; `pad` is
 // what only the larger one covers, so a height-only change reads 0 here.
@@ -27,16 +27,53 @@ const imagemagick = async () => {
   await $`sudo apt-get install -y --no-install-recommends -o Acquire::Retries=3 imagemagick`;
 };
 
-export default async ({ output, branch, slug, pr }) => {
+// overlens/dev's history newest first, each commit with the targetBranch
+// commit it snapshots, read off its `<branch> @ <sha>` message.
+const snapshotsOf = async (git) =>
+  lines(await git`git log --format=${'%H %s'} origin/overlens/dev`.text()).map((line) => {
+    const [commit, ...subject] = line.split(' ');
+    return { commit, source: subject.at(-1) };
+  });
+
+const tipOf = async (branch) => (await $`gh api repos/${repo}/commits/${branch} -q .sha`.text()).trim();
+
+// targetBranch's own crawl of the merge base may still be running when the
+// PR's finishes. While the merge base is still the tip, its snapshot is due:
+// every finished targetBranch crawl commits, changed or not.
+const wait = { every: 30_000, tries: 20 };
+
+// A PR compares against the snapshot of the commit it branched from — the
+// merge base with targetBranch — or that commit's nearest snapshotted
+// ancestor, so what merged into targetBranch since never reads as its change.
+const baselineOf = async (git, targetBranch) => {
+  let { mergeBase, moved } = await $`gh api repos/${repo}/compare/${sha}...${targetBranch} -q ${'{ mergeBase: .merge_base_commit.sha, moved: (.ahead_by > 0) }'}`.json();
+  let snapshots = await snapshotsOf(git);
+  for (let n = 0; !moved && !snapshots.some(({ source }) => source === short(mergeBase)) && n < wait.tries; n++) {
+    console.info(`Waiting for ${targetBranch}'s snapshot of ${short(mergeBase)}`);
+    await Bun.sleep(wait.every);
+    await git`git fetch -q origin`;
+    snapshots = await snapshotsOf(git);
+    moved = (await tipOf(targetBranch)) !== mergeBase;
+  }
+  // Every snapshot is of a commit targetBranch reached, so one it reached
+  // after the merge base is the only kind that isn't an ancestor of it.
+  const after = new Set(moved ? lines(await $`gh api --paginate repos/${repo}/compare/${mergeBase}...${targetBranch} -q ${'.commits[].sha'}`.text()).map(short) : []);
+  const baseline = snapshots.find(({ source }) => !after.has(source)) ?? snapshots.at(-1);
+  return { commit: baseline.commit, moved, late: !moved && baseline.source !== short(mergeBase) && mergeBase };
+};
+
+export default async ({ output, branch, slug, pr, targetBranch }) => {
   await imagemagick();
   const dir = `${tmpdir()}/overlens-publish`;
   const baseline = `${tmpdir()}/overlens-baseline.png`;
   rmSync(dir, { recursive: true, force: true });
   const devExists = Boolean((await $`git ls-remote ${remote} refs/heads/overlens/dev`.text()).trim());
-  if (devExists) await $`git clone -q --depth 1 --branch overlens/dev ${remote} ${dir}`;
+  if (devExists) await $`git clone -q --filter=blob:none --branch overlens/dev ${remote} ${dir}`;
   else await $`git init -q -b ${`overlens/${slug}`} ${dir}`;
 
   const git = (strings, ...values) => $(strings, ...values).cwd(dir);
+  const { commit, moved, late } = devExists && slug !== 'dev' ? await baselineOf(git, targetBranch) : {};
+  if (commit) await git`git checkout -q ${commit}`;
   await git`git config user.name ${'github-actions[bot]'}`;
   await git`git config user.email ${'41898282+github-actions[bot]@users.noreply.github.com'}`;
   const baseSha = (await git`git rev-parse -q --verify HEAD`.nothrow().text()).trim();
@@ -70,10 +107,12 @@ export default async ({ output, branch, slug, pr }) => {
     await git`git add report.json`;
   }
 
-  if ((await git`git diff --cached --quiet`.nothrow()).exitCode) {
-    await git`git commit -q -m ${`${branch} @ ${sha.slice(0, 7)}`}`;
+  // targetBranch commits every crawl, changed or not, so a PR waiting on the
+  // snapshot of its merge base can tell "not crawled yet" from "unchanged".
+  if (slug === 'dev' || (await git`git diff --cached --quiet`.nothrow()).exitCode) {
+    await git`git commit -q --allow-empty -m ${`${branch} @ ${short(sha)}`}`;
     await git`git push -qf ${remote} ${`HEAD:refs/heads/overlens/${slug}`}`;
   }
 
-  return { staged, stats, baselinePages, devExists };
+  return { staged, stats, baselinePages, devExists, moved, late };
 };

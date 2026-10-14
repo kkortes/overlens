@@ -216,7 +216,6 @@ export const loadInspector = async ({ owner, repo, n }) => {
     pr: +n,
     headSha: '',
     baseSha: '',
-    drift: false,
     report: null,
     pages: [],
     passes: [],
@@ -227,10 +226,7 @@ export const loadInspector = async ({ owner, repo, n }) => {
 
   await renew();
   if (run !== seq) return;
-  const [head, base] = await Promise.all([
-    tryRef(owner, repo, `overlens/pr-${n}`),
-    tryRef(owner, repo, 'overlens/dev'),
-  ]);
+  const head = await tryRef(owner, repo, `overlens/pr-${n}`);
   if (run !== seq) return;
 
   if (!head.sha) {
@@ -250,7 +246,6 @@ export const loadInspector = async ({ owner, repo, n }) => {
     return;
   }
   ins.headSha = head.sha;
-  ins.baseSha = base.sha || '';
 
   let report;
   try {
@@ -263,8 +258,10 @@ export const loadInspector = async ({ owner, repo, n }) => {
   }
   if (run !== seq) return;
 
+  // The base is the snapshot the PR was diffed against — the one its merge
+  // base with targetBranch pinned — never today's overlens/dev tip.
+  ins.baseSha = report.baseSha || '';
   ins.report = { baseSha: report.baseSha, sourcePr: report.sourcePr, sourceSha: report.sourceSha };
-  ins.drift = !!(report.baseSha && base.sha && report.baseSha !== base.sha);
   ins.pages = groupPages(report.pages);
   // The config's ordered pass list — its first entry is the landing variant,
   // and only its viewports/themes are offered. Reports from before the field

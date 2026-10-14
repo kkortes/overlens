@@ -2,7 +2,7 @@ import { $ } from 'bun';
 import { createHash } from 'crypto';
 import { tmpdir } from 'os';
 
-import { openPullOf, repo } from './github.js';
+import { openPullOf, repo, short } from './github.js';
 
 const inspector = process.env.INSPECTOR || 'https://overlens.korte.kim';
 const start = '<!-- overlens:summary -->';
@@ -62,7 +62,7 @@ const bodyFile = async (name, text) => {
   return file;
 };
 
-export default async ({ staged, stats, baselinePages, devExists, output, slug, pr, createPR }) => {
+export default async ({ staged, stats, baselinePages, devExists, moved, late, output, slug, pr, createPR, targetBranch }) => {
   const changed = unique(staged.map(([, file]) => baseOf(file)));
   const removed = unique(staged.filter(([status]) => status === 'D').map(([, file]) => baseOf(file)));
   const current = await Bun.file(`${output}/pages.txt`).text();
@@ -70,6 +70,10 @@ export default async ({ staged, stats, baselinePages, devExists, output, slug, p
   const total = pages.length;
   const lens = `${inspector}/${repo}/pull/${pr}`;
   const { title } = await $`gh pr view ${pr} -R ${repo} --json title`.json();
+  const notes = [
+    moved && `ℹ️ ${targetBranch} has moved on since this branch did; merge it in to compare against the latest snapshot.`,
+    late && `ℹ️ ${targetBranch}'s snapshot of ${short(late)} hadn't landed yet, so this compares against an older one; re-run Overlens on this PR once it has.`,
+  ].filter(Boolean);
 
   const files = staged.map(([status, file]) => {
     const label = { A: 'new', D: 'removed' }[status[0]] ?? stats.get(file) ?? 'changed';
@@ -84,6 +88,7 @@ export default async ({ staged, stats, baselinePages, devExists, output, slug, p
     `✅ ${total - changed.length}/${total} (${share(total - changed.length, total)}) pages identical`,
     `⚠️ ${changed.length}/${total} (${share(changed.length, total)}) pages differentiate`,
     '',
+    ...notes.flatMap((note) => [note, '']),
     ...files,
     '',
     sitemap(pages, changed),
@@ -102,7 +107,7 @@ export default async ({ staged, stats, baselinePages, devExists, output, slug, p
   const scanned = changed.length
     ? `🎭 Visual differences detected — ${share(changed.length, total)} of all pages have diffs. ${virtual ? `[PR was filed](${virtual}) · ` : ''}[View on Overlens](${lens})`
     : `✅ No visual differences. [View on Overlens](${lens})`;
-  const summary = `## This PR was visually scanned through [Overlens](https://overlens.korte.kim)\n\n${scanned}\n`;
+  const summary = `## This PR was visually scanned through [Overlens](https://overlens.korte.kim)\n\n${[scanned, ...notes].join('\n\n')}\n`;
 
   const { body: source } = await $`gh pr view ${pr} -R ${repo} --json body`.json();
   let skip = false;

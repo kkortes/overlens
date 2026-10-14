@@ -49,6 +49,6 @@ export default async () => {
   const output = await crawl(url);
   // A newer deploy of the branch, or a closed PR, settles it while this one crawled.
   if ((await slugOf(targetBranch)).slug !== slug) return;
-  const published = await publish({ output, branch, slug, pr });
-  if (pr) await report({ ...published, output, slug, pr, createPR });
+  const published = await publish({ output, branch, slug, pr, targetBranch });
+  if (pr) await report({ ...published, output, slug, pr, createPR, targetBranch });
 };

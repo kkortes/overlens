@@ -1,9 +1,9 @@
 # CLAUDE.md
 
 Stateless inspector for Overlens visual-regression snapshots. GitHub is the
-database: `/{owner}/{repo}/pull/{n}` reads the tips of that repo's
-`overlens/pr-{n}` (head) and `overlens/dev` (base) branches and renders the
-comparison. No accounts, no server state — one Vercel function exchanges the
+database: `/{owner}/{repo}/pull/{n}` reads the tip of that repo's `overlens/pr-{n}`
+branch (head) and the `overlens/dev` snapshot its `report.json` names as
+`baseSha` (base) and renders the comparison. No accounts, no server state — one Vercel function exchanges the
 GitHub OAuth code, everything else runs in the browser. The npm package
 `@ape-egg/overlens` in [package/](package/) is what writes those branches.
 
@@ -107,14 +107,30 @@ deployment's environment must match, default `Preview|Production`) and
   `PLAYWRIGHT_BASE_URL` reach the container, not the token. The consumer's
   `overlens.config` is imported by bun and by Playwright with no install, so
   it must stay dependency-free (type-only imports are erased and fine).
-- [publish.js](package/src/publish.js) — clones `overlens/dev`, lays the
-  output over it, diffs each changed PNG with ImageMagick (`compare -fuzz 5%
-  -metric AE` over the shared area, ≤32 pixels is noise), writes
-  `report.json` on PR branches and force-pushes `overlens/<slug>`.
+- [publish.js](package/src/publish.js) — clones `overlens/dev`
+  (`--filter=blob:none`, full history), lays the output over the baseline,
+  diffs each changed PNG with ImageMagick (`compare -fuzz 5% -metric AE` over
+  the shared area, ≤32 pixels is noise), writes `report.json` on PR branches
+  and force-pushes `overlens/<slug>`. A `targetBranch` run builds on the tip
+  and always commits (`--allow-empty`), so every finished crawl leaves a
+  `<branch> @ <sha7>` commit. A PR run builds on the snapshot of its merge
+  base instead: GitHub's compare API (`<sha>...<targetBranch>`) gives the
+  merge base and whether the target moved on; the snapshot whose message
+  names the merge base wins, else the newest one whose commit isn't among
+  those the target reached after it (the nearest snapshotted ancestor),
+  else the oldest. So a PR never shows what merged into the target since,
+  and merging the target in moves it forward. When the merge base is still
+  the target's tip but has no snapshot, the target's own crawl is still
+  running: the run polls for it (30s × 20) and, if it never lands, compares
+  against the nearest older snapshot and flags it as `late`.
 - [report.js](package/src/report.js) — the draft PR into `overlens/dev`
   (file list and mermaid sitemap) and the source PR's summary between
   `<!-- overlens:summary -->` markers, headed "This PR was visually scanned
-  through Overlens" linked to the site.
+  through Overlens" linked to the site. GitHub diffs the draft from the
+  point `overlens/pr-N` branched off `overlens/dev` — the pinned baseline —
+  so it shows only the PR's changes. Both carry a line when the target has
+  moved on (merge it in to compare against the latest snapshot) or the
+  merge base's snapshot came in late.
 - [cleanup.js](package/src/cleanup.js) — every successful deploy first
   sweeps the `overlens/pr-*` branches: a PR no longer open gets its draft PR
   closed and its branch deleted. That replaces the `pull_request: closed`
@@ -155,9 +171,10 @@ longer masked unless a config lists it.
 diffPercent? }] }` — status `added` | `changed` | `removed`, `diffPercent`
 counting mismatches within the area both images share. A page differing only
 in height is not a change and never reaches the report. A missing
-report.json is a hard stop ("re-run Overlens"), not a fallback render. The
-inspector warns with a `base drift` badge when `baseSha` no longer matches the
-`overlens/dev` tip.
+report.json is a hard stop ("re-run Overlens"), not a fallback render.
+`baseSha` is the `overlens/dev` commit `overlens/pr-N` sits on, the pinned
+baseline, and the inspector renders it as the base — never the
+`overlens/dev` tip, which may be newer.
 
 `kkortes/overlens-fixture` (public) holds synthetic branches covering every
 state: pr-1 (changes incl. reflow + variant-specific), pr-2 (clean),

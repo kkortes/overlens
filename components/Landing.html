@@ -54,8 +54,8 @@
       <p>
         A repo's Overlens workflow crawls every preview deploy and pushes
         screenshots to <code>overlens/dev</code> and <code>overlens/pr-{n}</code>
-        branches. This site reads those branches — tip against tip — and renders
-        what a merge would mean today: Split, Onion, 2-up and a pixel-level
+        branches. This site reads those branches and renders what the PR
+        changed: Split, Onion, 2-up and a pixel-level
         Difference, at both viewports and in both themes. Buttons marked with
         <code>data-overlens-press</code> are pressed, and the drawer or dialog
         each opens is shot too, as its own slide.
@@ -63,7 +63,10 @@
       <p>
         The baseline is whichever branch the repo's config names in
         <code>targetBranch</code> — its snapshots always live in
-        <code>overlens/dev</code>, the branch this inspector reads.
+        <code>overlens/dev</code>, one commit per crawl. A PR compares
+        against the snapshot of the commit it branched from, so what merged
+        into the target since never shows up as its change. Merging the
+        target in moves it to the latest snapshot.
       </p>
     </guide-modal>
   </component>

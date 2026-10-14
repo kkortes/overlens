@@ -19,7 +19,6 @@ export default {
     pr: 0,
     headSha: '',
     baseSha: '',
-    drift: false,
     report: null,
     pages: [],
     passes: [],

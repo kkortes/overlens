@@ -47,7 +47,8 @@ The job's `runs-on` picks the runner.
 
 The workflow runs `overlens` with no argument on `deployment_status`:
 
-- A successful deployment with a URL, whose environment matches `ENVIRONMENTS`, at a commit carrying an `overlens.config`, is crawled. A deploy of `targetBranch` becomes the baseline on `overlens/dev`; a deploy of a branch with an open PR lands on `overlens/pr-{n}` with a `report.json`, a draft PR into `overlens/dev` when pages changed (unless `createPR: false`), and a summary between `<!-- overlens:summary -->` markers in the source PR's description. A deploy that's no longer its branch's tip, or of a branch without an open PR, is skipped.
+- A successful deployment with a URL, whose environment matches `ENVIRONMENTS`, at a commit carrying an `overlens.config`, is crawled. A deploy of `targetBranch` adds a snapshot commit to `overlens/dev`, changed or not; a deploy of a branch with an open PR lands on `overlens/pr-{n}` with a `report.json`, a draft PR into `overlens/dev` when pages changed (unless `createPR: false`), and a summary between `<!-- overlens:summary -->` markers in the source PR's description. A deploy that's no longer its branch's tip, or of a branch without an open PR, is skipped.
+- A PR is compared against the snapshot of its merge base with `targetBranch` — the commit it branched from, or its nearest snapshotted ancestor — not the latest one, so what merged into `targetBranch` since never shows up as its change. Merging `targetBranch` in moves it to the latest snapshot, and the summary says when `targetBranch` has moved on. When the merge base is still `targetBranch`'s tip and its own crawl hasn't landed yet, the PR's run waits for it up to 10 minutes, then compares against the nearest older snapshot and says so.
 - Every successful deployment first closes the draft snapshot PR and deletes `overlens/pr-{n}` of each PR closed since.
 
 `overlens init` also runs by name.

@@ -33,9 +33,10 @@ const config: OverlensConfig = {
   // pagesIncluded: ["/"],
   // Subtrees the crawl must not enter.
   // pagesExcluded: ["/admin"],
-  // The branch Overlens compares PRs against. Its snapshots become the
-  // baseline, pushed to a branch always named overlens/dev — the name the
-  // inspector reads — no matter what your branch is called.
+  // The branch Overlens compares PRs against. Its snapshots are pushed to a
+  // branch always named overlens/dev — the name the inspector reads — no
+  // matter what your branch is called. A PR compares against the snapshot of
+  // the commit it branched from.
   targetBranch: "main",
   passes: [
     { name: "mobile-light", width: 390, theme: "light" },
