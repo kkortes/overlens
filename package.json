@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "\"$(git rev-parse --path-format=absolute --git-common-dir)/../../dev.sh\" 'bun dev.js'",
     "compile": "bun node_modules/@ape-egg/vibe-compiler/bin/vibe-compile.js",
-    "publish:check": "cd package && npm pack --dry-run",
-    "publish:overlens": "bun publish:check && ./scripts/publish.sh"
+    "publish:check": "cd package && npm pack --dry-run"
   },
   "dependencies": {
     "@ape-egg/codie": "^0.1.3",

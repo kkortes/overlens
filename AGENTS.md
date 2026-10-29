@@ -14,10 +14,7 @@ GitHub OAuth code, everything else runs in the browser. The npm package
   `https://overlens.localhost`, honors `$PORT`)
 - `bun run compile` — one-off build to `compiled/` (what Vercel runs, then
   it copies `package/templates` to `compiled/templates`)
-- `bun publish:overlens` — `npm pack --dry-run`, then
-  [scripts/publish.sh](scripts/publish.sh) asks for a version (enter keeps
-  the one the branch bumped to) and publishes `package/`. The developer's to
-  run, never an agent's.
+- `bun publish:check` — `npm pack --dry-run` of `package/`, what would ship.
 
 ## Contributing and versioning
 
@@ -26,8 +23,16 @@ GitHub OAuth code, everything else runs in the browser. The npm package
   it is that one.
 - The version lives in `package/package.json`. The root `package.json` is the
   private site and keeps its own.
-- Publishing is done by hand by the developer once the branch is merged to
-  `main`. An agent never publishes.
+- Publishing is done by the developer once the branch is merged to `main`, by
+  pushing a version tag. An agent never publishes and never pushes a version
+  tag.
+- The developer tags the merged release `git tag -a v<version>` and pushes it
+  with `git push --follow-tags`. A `v*.*.*` tag push runs
+  [.github/workflows/publish.yml](.github/workflows/publish.yml): it fails
+  unless the tag is `v` plus the version in `package/package.json`, then
+  publishes `package/` as public with `npm publish --provenance`, authenticated
+  by npm trusted publishing, so no npm token is kept anywhere. Pushes to `main`
+  and moving the floating `v1` tag publish nothing.
 
 ## Architecture
 

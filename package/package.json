@@ -1,6 +1,6 @@
 {
   "name": "@ape-egg/overlens",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Visual regression review straight from GitHub: crawls every deploy, diffs the screenshots and reports in the PR — run from a GitHub workflow.",
   "type": "module",
   "bin": {
@@ -13,6 +13,11 @@
     "templates"
   ],
   "homepage": "https://overlens.korte.kim",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kkortes/overlens.git",
+    "directory": "package"
+  },
   "keywords": [
     "github-actions",
     "visual-regression",

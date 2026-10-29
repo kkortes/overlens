@@ -4,4 +4,5 @@ The inspector at [overlens.korte.kim](https://overlens.korte.kim) and the npm pa
 
 - `bun dev` — the site at `https://overlens.localhost`.
 - `bun run compile` — the site to `compiled/`.
-- `bun publish:overlens` — checks the package with `npm pack --dry-run`, then asks for a version and publishes `package/` to npm.
+- `bun publish:check` — lists what `package/` would ship, with `npm pack --dry-run`.
+- Pushing a `v<version>` tag publishes `package/` to npm with provenance, from [.github/workflows/publish.yml](.github/workflows/publish.yml).
