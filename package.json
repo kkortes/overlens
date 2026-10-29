@@ -10,11 +10,11 @@
     "publish:overlens": "bun publish:check && ./scripts/publish.sh"
   },
   "dependencies": {
-    "@ape-egg/codie": "^0.1.3",
-    "@ape-egg/vibe": "^3.0.5"
+    "@ape-egg/codie": "^0.2.3",
+    "@ape-egg/vibe": "^4.3.24"
   },
   "devDependencies": {
-    "@ape-egg/vibe-compiler": "^3.0.5"
+    "@ape-egg/vibe-compiler": "^4.3.24"
   },
   "vibe-compiler": {
     "source": "./",
