@@ -29,8 +29,9 @@ GitHub OAuth code, everything else runs in the browser. The npm package
 - The developer tags the merged release `git tag -a v<version>` and pushes it
   with `git push --follow-tags`. A `v*.*.*` tag push runs
   [.github/workflows/publish.yml](.github/workflows/publish.yml): it fails
-  unless the tag is `v` plus the version in `package/package.json`, then
-  publishes `package/` as public with `npm publish --provenance`, authenticated
+  unless the tag is `v` plus the version in `package/package.json`, builds the
+  site with `bun run compile` (the package has no build and the project no
+  test script), then publishes `package/` as public with `npm publish --provenance`, authenticated
   by npm trusted publishing, so no npm token is kept anywhere. Pushes to `main`
   and moving the floating `v1` tag publish nothing.
 
